@@ -1,0 +1,47 @@
+{
+  "name": "api-mocker",
+  "version": "0.9.0",
+  "description": "Server with an API REST designed to imitiate response from third-parties. It'll help testing external integrations",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "nodemon",
+    "build": "tsc && copyfiles -u 1 src/**/*.yml build/app/",
+    "test": "lab "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/qo-oss/api-mocker.git"
+  },
+  "keywords": [
+    "api",
+    "mock",
+    "testing",
+    "server"
+  ],
+  "author": "Roberto Sánchez",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://gitlab.com/qo-oss/api-mocker/issues"
+  },
+  "homepage": "https://gitlab.com/qo-oss/api-mocker#readme",
+  "dependencies": {
+    "@hapi/hapi": "^20.2.2",
+    "@ngneat/falso": "^6.0.2",
+    "command-line-args": "^5.2.1",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@hapi/code": "^9.0.1",
+    "@hapi/eslint-plugin": "^6.0.0",
+    "@hapi/lab": "^25.0.1",
+    "@types/command-line-args": "^5.2.0",
+    "@types/hapi__hapi": "^20.0.12",
+    "@types/js-yaml": "^4.0.5",
+    "@types/lab": "^11.1.1",
+    "@types/node": "^18.0.0",
+    "copyfiles": "^2.4.1",
+    "nodemon": "^2.0.18",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.4"
+  }
+}

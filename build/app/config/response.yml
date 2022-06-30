@@ -1,0 +1,17 @@
+$defaultRoute$:
+    success: true
+    request: 
+        body: ${request.body}
+        params: ${request.params}
+$error$:
+    $httpStatus$: 500
+    success: false
+    error: "Error occurred for request: ${request.path}"
+    request: $request
+routes:
+    post: 
+        "api/hola/":
+            success: true            
+            request: 
+                body: ${request.body}
+                params: ${request.params}
