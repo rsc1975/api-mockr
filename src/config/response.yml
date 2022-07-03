@@ -1,7 +1,7 @@
 $defaultRoute$:
     success: true
     request: 
-        body: ${request.body}
+        body: ${request.payload}
         params: ${request.params}
 $error$:
     $httpStatus$: 500
@@ -10,8 +10,8 @@ $error$:
     request: $request
 routes:
     post: 
-        "api/.*":
+        ".*":
             success: true            
             request: 
-                body: ${request.body}
+                body: ${request.payload}
                 params: ${request.params}
