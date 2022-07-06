@@ -31,6 +31,10 @@ export class MockServer {
             host: this.host,
             routes: {
                 cors: true,
+                payload: {
+                    output: 'data',
+                    parse: true,                    
+                }
                // validate: {
                //     failAction: async (request: Request, h: ResponseToolkit, err: any) => {
                //         console.log(err);
@@ -55,20 +59,27 @@ export class MockServer {
         });
 
         const logReqest = (req: Request) => {
-            let logReq = `${req.method} ${req.url.pathname}`;
-            if (req.url.searchParams.keys.length > 0) {
-                logReq += ` [Params: ${req.url.searchParams}]`;
+            
+            let logReq = `${req.method.toUpperCase()} ${req.url.pathname}`;
+            if (!!req.url.search) {
+                logReq += ` [Params: ${req.url.search.substring(1).replace('&', ' ')}]`;
             }
             if (req.headers['content-type'] === 'application/json') {
+                
                 logReq += ` [Body: ${JSON.stringify(req.payload)}]`;
             }
             console.info(logReq);
+            this.server.log('info', logReq);
         }
 
-        srv.ext('onRequest', (req : Request, h : ResponseToolkit) => {
+        srv.ext('onPreHandler', (req : Request, h : ResponseToolkit) => {
             if (this.logRequestData) {
                 logReqest(req);
             }
+            return h.continue;
+        });
+
+        srv.ext('onRequest', (req : Request, h : ResponseToolkit) => {
             const { headers } : any = req;
             const errorCode = +headers['x-mocker-force-error'];
             if (!!errorCode) {                

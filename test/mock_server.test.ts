@@ -4,9 +4,10 @@ import Code from '@hapi/code';
 import Lab from '@hapi/lab';
 import { Server } from '@hapi/hapi';
 import { MockServer } from'../src/mock_server';
+import Sinon from 'sinon';
 
 const { expect } = Code;
-const { it, describe, before } = exports.lab = Lab.script();
+const { it, describe, before, afterEach } = exports.lab = Lab.script();
 
 describe('Testing server management', () => {
     let mockServer : MockServer;
@@ -15,8 +16,9 @@ describe('Testing server management', () => {
         mockServer = new MockServer();
         process.env.NODE_ENV = 'test';
     });
-
-
+    afterEach(() => {
+        Sinon.restore();
+    });
 
     it('Server creation', () => {
         
@@ -102,6 +104,33 @@ describe('Testing server management', () => {
         expect(localMockServer.port).to.be.equal(5555);
         
     });
+
+    it('Log request data', async () => {
+        const logConsole = Sinon.stub(console, 'info');
+        const localMockServer : MockServer = new MockServer({apiPrefix:'/api', logRequestData:true});
+        const res = await localMockServer.server.inject({
+            method: 'POST',
+            url: '/api/whatever?hola=caracola&foo=bar',
+            payload: {
+                name: 'Rob',
+            }
+        });
+        expect(res.statusCode).to.be.equal(200);
+        expect(logConsole.calledOnce).be.true();
+        //console.log('LLAMADAS:', logConsole.calledOnce, logConsole.getCall(0).args);
+        
+        Sinon.assert.match(logConsole.getCall(0).args[0], /POST.*api\/whatever.*hola.*caracola.*name.*Rob/);
+
+        const res2 = await localMockServer.server.inject({
+            method: 'GET',
+            url: '/api/different'
+        });
+        expect(res.statusCode).to.be.equal(200);
+        expect(logConsole.calledTwice).be.true();
+        Sinon.assert.match(logConsole.getCall(1).args[0], /GET.*api\/different/);
+
+    });
+
 
     
     
