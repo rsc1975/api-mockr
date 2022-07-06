@@ -2,10 +2,8 @@ import { getParams } from './cli_parser';
 import { MockServer } from './mock_server';
 
 const params = getParams();
-console.log(params);
 
-
-const mockServer = new MockServer();
+const mockServer = new MockServer({...params});
 
 mockServer.start();
 

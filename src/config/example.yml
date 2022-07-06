@@ -1,0 +1,18 @@
+routes:
+    get: 
+        "/country/${id}":
+            success: true
+            id: ${id}
+            numero: ${random.integer}
+            name: ${random.name}
+            request: 
+                body: ${request.payload}
+                params: ${request.params}
+        "/country":
+            - $length$: ${random.integer.10}
+              id: ${id}
+              numero: ${random.integer}
+              name: ${random.name}
+              request: 
+                  body: ${request.payload}
+                  params: ${request.params}

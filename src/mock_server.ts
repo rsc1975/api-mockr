@@ -1,15 +1,27 @@
 import { Request, ResponseToolkit, server as hapiServer, Server } from '@hapi/hapi';
 
+interface MockServerInputParams {
+    port?: number;
+    host?: string;
+    debug?: boolean;
+    logRequestData?: boolean;
+    config?: string[];
+    apiPrefix?: string;
+}
+
+
 export class MockServer {
     public server: Server;
     public host: string;
     public port: number;
     public apiPrefix: string;
+    public logRequestData?: boolean;
 
-    constructor(host?: string, port?: number, apiPrefix? : string) {
+    constructor({host, port, apiPrefix, logRequestData, } : MockServerInputParams = {}) {
         this.apiPrefix = apiPrefix || process.env.MOCKER_PREFIX || '/api';
         this.host = host || process.env.MOCKER_BINDING || '0.0.0.0';
         this.port = port || +(process.env.MOCKER_PORT || 3003);
+        this.logRequestData = !!logRequestData;
         this.server = this.create();
     }
 
@@ -42,7 +54,21 @@ export class MockServer {
             }
         });
 
+        const logReqest = (req: Request) => {
+            let logReq = `${req.method} ${req.url.pathname}`;
+            if (req.url.searchParams.keys.length > 0) {
+                logReq += ` [Params: ${req.url.searchParams}]`;
+            }
+            if (req.headers['content-type'] === 'application/json') {
+                logReq += ` [Body: ${JSON.stringify(req.payload)}]`;
+            }
+            console.info(logReq);
+        }
+
         srv.ext('onRequest', (req : Request, h : ResponseToolkit) => {
+            if (this.logRequestData) {
+                logReqest(req);
+            }
             const { headers } : any = req;
             const errorCode = +headers['x-mocker-force-error'];
             if (!!errorCode) {                

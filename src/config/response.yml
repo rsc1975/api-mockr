@@ -1,4 +1,4 @@
-$defaultRoute$:
+$defaultResponse$:
     success: true
     request: 
         body: ${request.payload}

@@ -2,6 +2,15 @@ import yaml from 'js-yaml';
 import { readFileSync } from 'fs';
 import path from 'path';
 
+type HttpMethods = '*' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head' | 'trace';
+
+
+export type MockerConfig = {
+    $defaultResponse$?: {[key : string]: object};
+    $error$?: {[key : string]: object};
+    routes?: {[key in HttpMethods]: object};  
+ }
+
 
 class Merger {
 
@@ -38,7 +47,7 @@ class Merger {
 
 export const defaultResponseConfig: object = yaml.load(readFileSync(path.join(__dirname, 'config', 'response.yml'), 'utf8')) as object;
 
-console.log(yaml.dump(defaultResponseConfig, { indent: 2 }));
+console.log(JSON.stringify(defaultResponseConfig, null, 2));
 
 export function getConfig(otherConfig?: object) : object {
     return Merger.mergeDeep(defaultResponseConfig, otherConfig || {});

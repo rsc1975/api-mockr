@@ -5,8 +5,9 @@ module.exports = {
     threshold: 90,
     lint: false,
     typescript: true,
-    verbose: true,
+    verbose: true,    
     pattern: '\.test',
     reporter: ['console', 'html', 'lcov'],
-    output: ['stdout', 'coverage/coverage.html', 'coverage/lcov.info']
+    output: ['stdout', 'coverage/coverage.html', 'coverage/lcov.info'],
+    ignore: ['Symbol(source-map-support/sharedData)']
 };

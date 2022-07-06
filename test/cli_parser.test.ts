@@ -58,10 +58,12 @@ describe('Testing CLI parser', () => {
         
         try {
             getParams();
-        } catch(e) {
+        } catch(e:any) {
             expect(e).to.be.an.object();
             expect(e.error).to.be.equal('Exit');
         }
+        expect(exitStub.calledOnce).to.be.true();
+        expect(exitStub.calledWith(-1)).to.be.true();
         
     });
 

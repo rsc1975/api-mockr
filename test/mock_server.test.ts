@@ -78,7 +78,7 @@ describe('Testing server management', () => {
     });
 
     it('Start/stop server', async () => {
-        const localMockServer : MockServer = new MockServer('localhost', 33333, '/testapi');
+        const localMockServer : MockServer = new MockServer({host:'localhost', port:33333, apiPrefix:'/testapi'});
         expect(localMockServer.apiPrefix).to.be.equal("/testapi");
         expect(localMockServer.host).to.be.equal("localhost");
         expect(localMockServer.port).to.be.equal(33333);
