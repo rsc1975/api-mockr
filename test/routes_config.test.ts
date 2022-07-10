@@ -34,7 +34,7 @@ describe('Testing routes config', () => {
         const newconfig = {
             routes: {
                 post: {
-                    ".*": {
+                    "/${id}": {
                         success: false,
                         data: [12, {ok: true}]
                     },
@@ -44,14 +44,14 @@ describe('Testing routes config', () => {
                     }
                 }
             }
-        }
-        const composedConfig = getConfig(newconfig);        
-        expect(composedConfig['$defaultResponse$']['success']).to.be.true;
-        expect(composedConfig['routes']['post']['.*']).to.be.an.object();
-        expect(composedConfig['routes']['post']['.*']['success']).to.be.false;
-        expect(composedConfig['routes']['post']['.*']['data']).to.be.array;
-        expect(composedConfig['routes']['post']['/']['success']).to.be.true;
-        expect(composedConfig['routes']['post']['/']['data']).to.be.equal('New API');
+        };
+        const composedConfig = getConfig(newconfig as MockerConfig);
+        expect(composedConfig.$defaultResponse$!['success']).to.be.true;
+        expect(composedConfig.routes!['post']!["/${id}"]).to.be.an.object();
+        expect(composedConfig.routes!['post']!["/${id}"]['success']).to.be.false;
+        expect(composedConfig.routes!['post']!["/${id}"]['data']).to.be.array;
+        expect(composedConfig.routes!['post']!['/']['success']).to.be.true;
+        expect(composedConfig.routes!['post']!['/']['data']).to.be.equal('New API');
 
     });
 

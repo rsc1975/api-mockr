@@ -35,12 +35,6 @@ export class MockServer {
                     output: 'data',
                     parse: true,                    
                 }
-               // validate: {
-               //     failAction: async (request: Request, h: ResponseToolkit, err: any) => {
-               //         console.log(err);
-               //         return h.response({error: err}).code(500);
-               //     }
-               // }
             }
         });
         srv.route({
@@ -53,7 +47,7 @@ export class MockServer {
         srv.route({
             method: '*',
             path: `${this.apiPrefix}/{p*}`,
-            handler: (request, h) => {
+            handler: (req: Request, h : ResponseToolkit) => {
                 return {'ok': 'Everything OK', more: 234, other: 'OK'};
             }
         });
@@ -88,16 +82,19 @@ export class MockServer {
                 return h.response(errorMsg).code(errorCode < 600 ? errorCode : 500).takeover();
             }
             return h.continue;
-          });
+        });
 
         srv.ext('onPreResponse', (req : Request, h : ResponseToolkit) => {
             const { response } : any = req;
             if (response.output?.statusCode === 404) {
                 return h.response(`Missing route, try: ${this.apiPrefix}/<anything>`).code(404);
             }
+            if (req.query._pretty) {
+                response.spaces(2).takeover();
+            }            
             return h.continue;
-          });
-          
+        });
+    
         return srv;
     }
 

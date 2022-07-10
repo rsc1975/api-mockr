@@ -25,6 +25,7 @@ const configSchema = {
     "id": "/RoutesConfig",
     "type": "object",
     "properties": {
+      "_rePath": { type: "array" },
       "$defaultResponse$": {"$ref": "/Payload"},
       "$error$": {"$ref": "/Payload"},
       "routes": {
@@ -44,7 +45,7 @@ validator.addSchema(responsePayloadSchema, "/Payload");
 validator.addSchema(routeSchema, "/Route");
 validator.addSchema(configSchema, "/RoutesConfig");
 
-export const validateConfig = (config: object) : ValidatorResult => {
+export const validateConfigSchema = (config: object) : ValidatorResult => {
     return validator.validate(config, configSchema);
 }
 
