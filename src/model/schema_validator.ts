@@ -3,7 +3,7 @@ import { Validator, ValidatorResult } from "jsonschema";
 // Address, to be embedded on Person
 const responsePayloadSchema = {
     "id": "/Payload",
-    "type": "object",
+    "type": ["object", "array"],
     "properties": {
       "$httpStatus$": {"type": "number", minimum: 200, maximum: 599},
     },

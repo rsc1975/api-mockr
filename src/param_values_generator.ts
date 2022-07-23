@@ -1,5 +1,5 @@
 import { Request } from "@hapi/hapi";
-import { randEmail, randFirstName, randFullName, randLastName } from '@ngneat/falso';
+import { randAddress, randEmail, randFirstName, randFullName, randLastName } from '@ngneat/falso';
 
 
 export class ParamValues {
@@ -18,6 +18,7 @@ export class ParamValues {
       personFullName: (gender?: "male" | "female") => randFullName({ gender }),
       personFirstName: (gender?: "male" | "female") => randFirstName({ gender }),
       personLastName: () => randLastName(),
+      city: () => randAddress().city,
       choose: (...values: string[]) => values[Math.floor(Math.random() * values.length)] || null,
     },
     server: {

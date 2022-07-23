@@ -6,7 +6,9 @@ import { validateConfigSchema } from './model/schema_validator';
 export type HttpMethod = '*' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head' | 'trace';
 
 export type SingleResponseConfig = {[key: string]: any};
-export type HttpMethodRoutesConfig = {[key: string]: SingleResponseConfig};
+export type ArrayResponseConfig = SingleResponseConfig[];
+
+export type HttpMethodRoutesConfig = {[key: string]: SingleResponseConfig | ArrayResponseConfig};
 export type AllRoutesConfig = Partial<Record<HttpMethod, HttpMethodRoutesConfig>>;
 export type PathMatcher = {
     re?: RegExp;
@@ -25,7 +27,7 @@ export type MockerConfig = {
     /**
      * Default response to return when no route is matched
      */
-     $defaultResponse$?: SingleResponseConfig;
+     $defaultResponse$?: SingleResponseConfig | ArrayResponseConfig;
     /**
      * Default response on errors
      */
@@ -75,8 +77,12 @@ class Merger {
         return output;
     }
 
-    static deepCopy(obj: object): object {
-        return Merger.deepMerge({}, obj);
+    static deepCopy(obj: any): object {
+        if (Array.isArray(obj)) {
+            return Merger.cloneArray(obj);
+        } else {
+            return Merger.deepMerge({}, obj);
+        }        
     }
 }
 

@@ -86,5 +86,12 @@ describe('Testing routes config', () => {
         expect(obj.bar.internal).to.be.equal('Hi');
     });
 
+    it('checks deepCopy on null or undefined', () => {
+        const obj = undefined;
+        const objCopy = deepCopy(obj!);
+        expect(objCopy).to.be.an.object();
+        expect(objCopy).to.be.empty();
+    });
+
 
 });
