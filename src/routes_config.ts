@@ -68,7 +68,9 @@ class Merger {
     static deepMerge(...objects: object[]): object {
         let output = {};
         objects.forEach(obj => {
-            Merger.merge1Level(output, obj);
+            if (obj) {
+                Merger.merge1Level(output, obj);
+            }
         });
         return output;
     }

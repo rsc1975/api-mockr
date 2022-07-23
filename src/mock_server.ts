@@ -5,7 +5,7 @@ interface MockServerInputParams {
     host?: string;
     debug?: boolean;
     logRequestData?: boolean;
-    config?: string[];
+   
     apiPrefix?: string;
 }
 
@@ -52,7 +52,7 @@ export class MockServer {
             }
         });
 
-        const logReqest = (req: Request) => {
+        const logRequest = (req: Request) => {
             
             let logReq = `${req.method.toUpperCase()} ${req.url.pathname}`;
             if (!!req.url.search) {
@@ -68,7 +68,7 @@ export class MockServer {
 
         srv.ext('onPreHandler', (req : Request, h : ResponseToolkit) => {
             if (this.logRequestData) {
-                logReqest(req);
+                logRequest(req);
             }
             return h.continue;
         });

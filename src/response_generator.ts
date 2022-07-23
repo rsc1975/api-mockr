@@ -82,14 +82,16 @@ const PATH_VARIABLE_EXP = /\${[\w\.\-]+}/g;
 export class ResponseGenerator {
 
   private readonly request: Request;
-  private readonly config: MockerConfig
+  private readonly config: MockerConfig;
+  private readonly apiPrefix: string;
   matchedPath?: string;
   pathVars: Record<string, string> = {};
 
-  constructor(request: Request, config: MockerConfig) {
+  constructor(request: Request, config: MockerConfig, apiPrefix: string) {
     this.preparePathMatchers(config);
     this.request = request;
     this.config = config;
+    this.apiPrefix = apiPrefix;
   }
 
   /**
@@ -106,16 +108,32 @@ export class ResponseGenerator {
         const routeConfig = routes[method as HttpMethod];
         const paths = Object.keys(routeConfig!);
         const pathMatchers: PathMatcher[] = [];
+        let containsWildcardPath = false;
         paths.forEach(path => {
+          if (!path.startsWith('/') && path !== '*') {
+            // We should normalize all path, starting by '/
+            const pathConfig = routeConfig![path];
+            path = '/' + path;
+            routeConfig![path] = pathConfig;
+            delete routeConfig![path.substring(1)];
+          }
           if (PATH_VARIABLE_EXP.test(path)) {
             const vars = (path.match(PATH_VARIABLE_EXP) as string[])!.map(v => v.replace(/[\$\{\}]/g, ''));
             const re = new RegExp("^" + path.replace(PATH_VARIABLE_EXP, '([^/]+)') + "$");
 
             pathMatchers.push({ re, vars, path });
           } else {
-            pathMatchers.push({ path });
+            if (path === '*') {
+              containsWildcardPath = true;
+            } else {              
+              pathMatchers.push({ path });
+            }            
           }
         });
+        // This ensure that the '*' path is always the last one
+        if (containsWildcardPath) {
+          pathMatchers.push({ path: '*' });
+        }
         allPathMatchers[method as HttpMethod] = pathMatchers;
       }
       );
@@ -132,9 +150,11 @@ export class ResponseGenerator {
     if (!methodRouteConfig) {
       return this.config.$defaultResponse$ || {};
     }
-    const path = this.request.url.pathname;
-    const pathMatchers: PathMatcher[] = this.config._rePath![method]!;
-    const matchedPath = pathMatchers.find(m => m.re?.test(path) || m.path === path);
+    const path = this.request.url.pathname.substring(this.apiPrefix.length);
+
+    const pathMatchers: PathMatcher[] = this.config._rePath![method] || this.config._rePath!['*'] || [];
+    const matchedPath = pathMatchers.find(m => m.re?.test(path) || m.path === path || m.path === '*');
+    
     if (!matchedPath) {
       return this.config.$defaultResponse$ || {};
     } else {
@@ -142,7 +162,8 @@ export class ResponseGenerator {
       this.pathVars = matchedPath.re?.exec(path)!.slice(1).reduce((acc, v, i) => {
         acc[matchedPath.vars![i]] = v;
         return acc;
-      }, {} as Record<string, string>)!;
+      }, {} as Record<string, string>) || {};
+
       return methodRouteConfig[matchedPath.path];
     }
 
