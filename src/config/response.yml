@@ -1,20 +1,20 @@
 $defaultResponse$:
-	success: true
-	request:
-	  path: ${request.path} 
-		body: ${request.payload}
-		params: ${request.params}
+  success: true
+  request:
+    path: ${request.path} 
+    body: ${request.payload}
+    params: ${request.params}
 $error$:
-	$httpStatus$: 500
-	success: false
-	error: "Error occurred for request: ${request.path}"
-	request:
-		body: ${request.payload}
-		params: ${request.params}
+  $httpStatus$: 500
+  success: false
+  error: "Error occurred for request: ${request.path}"
+  request:
+    body: ${request.payload}
+    params: ${request.params}
 routes:
-  post: 
-    ".*":
-			success: true            
-			request: 
-				body: ${request.payload}
-				params: ${request.params}
+  "*": 
+    "*":
+      success: true 
+      request: 
+        path: ${request.path}         
+        params: ${request.params}

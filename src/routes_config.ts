@@ -95,8 +95,6 @@ export function assertConfigIsValid(conf: any) : void {
     }    
 }
 
-
-
 /**
  * Returns the current config for the server
  * 

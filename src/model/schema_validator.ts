@@ -30,9 +30,9 @@ const configSchema = {
       "$error$": {"$ref": "/Payload"},
       "routes": {
         "type": "object",
-        "properties": {
-            "$any$": {"$ref": "/Route"},
-            "^(get|put|post|patch|delete|options|head)$": {"$ref": "/Route"}
+        "patternProperties": {
+          "\\*": {"$ref": "/Route"},
+          "^(get|put|post|patch|delete|options|head)$": {"$ref": "/Route"}
         },
         "additionalProperties": false
       }

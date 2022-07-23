@@ -79,6 +79,16 @@ describe('Testing server management', () => {
         expect(res.statusCode).to.be.equal(200);
     });
 
+    it('Server basic api call pretty', async () => {
+        
+        const res = await mockServer.server.inject({
+            method: 'get',
+            url: '/api/whatever?_pretty=1'
+        });
+        expect(res.statusCode).to.be.equal(200);
+        expect(res.payload).to.contains('\n');
+    });
+
     it('Start/stop server', async () => {
         const localMockServer : MockServer = new MockServer({host:'localhost', port:33333, apiPrefix:'/testapi'});
         expect(localMockServer.apiPrefix).to.be.equal("/testapi");
@@ -87,7 +97,7 @@ describe('Testing server management', () => {
 
         setTimeout(async () => {
             await localMockServer.dispose();
-        }, 10);
+        }, 100);
 
         await localMockServer.start();
     });
