@@ -10,28 +10,6 @@ import { ResponseGenerator } from'../src/response_generator';
 const { expect } = Code;
 const { it, describe, before } = exports.lab = Lab.script();
 
-/*
-$defaultResponse$:
-  success: true
-  request:
-    path: ${request.path} 
-    body: ${request.payload}
-    params: ${request.params}
-$error$:
-  $httpStatus$: 500
-  success: false
-  error: "Error occurred for request: ${request.path}"
-  request:
-    body: ${request.payload}
-    params: ${request.params}
-routes:
-  post: 
-    ".*":
-      success: true            
-      request: 
-        body: ${request.payload}
-        params: ${request.params}
-*/
 const CONFIG : MockerConfig = {
     routes: {
         '*': {

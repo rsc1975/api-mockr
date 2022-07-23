@@ -155,7 +155,6 @@ export class ResponseGenerator {
       methodRouteConfig = this.config.routes![method] || this.config.routes!['*'];
     }
     if (!methodRouteConfig) {
-      console.log('this.config.$defaultResponse$', this.config.$defaultResponse$);
       return this.config.$defaultResponse$ || {};
     }
     const path = this.request.url.pathname.substring(this.apiPrefix.length);
