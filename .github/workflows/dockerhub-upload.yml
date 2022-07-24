@@ -1,4 +1,4 @@
-name: GitHub Actions for api-mocker to generate and upload docker image
+name: "Docker image: Generate and upload to hub.docker.com"
 on:
   push:
     branches:

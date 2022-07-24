@@ -1,9 +1,6 @@
-name: GitHub Actions for QA & coverage
+name: Launching tests and coverage
 on:
   workflow_call:
-  push:
-    branches:
-      - main
   
 jobs:
   test-and-coverage:
