@@ -173,7 +173,6 @@ export class ResponseGenerator {
 
       return methodRouteConfig[matchedPath.path];
     }
-
   }
 
   private findGeneratedValue(obj: object, key: string, value: any): RefValue[] {
