@@ -29,6 +29,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: false
-          tags: ${{ DOCKER_IMAGE }}:${{APP_VERSION}}  ${{ DOCKER_IMAGE }}:latest
+          tags: ${{ DOCKER_IMAGE }}:${{APP_VERSION}} , ${{ DOCKER_IMAGE }}:latest
       - run: echo "🍏 This job's status is ${{ job.status }}."
 
