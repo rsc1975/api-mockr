@@ -23,11 +23,11 @@ jobs:
               echo "APP_VERSION=${{needs.build-and-test.outputs.app_version}}" >> $GITHUB_ENV
               echo "APP_NAME=${{needs.build-and-test.outputs.APP_NAME}}" >> $GITHUB_ENV
       - run: echo "DOCKER_IMAGE=${{ env.DOCKER_ID }}/${{ env.APP_NAME }}" >> $GITHUB_ENV
-      - run: "echo App ${DOCKER_IMAGE}"
+      - run: echo App ${{env.DOCKER_IMAGE}}
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
           push: false
-          tags: ${DOCKER_IMAGE}:${APP_VERSION} , ${DOCKER_IMAGE}:latest
+          tags: ${{ env.DOCKER_IMAGE }}:${{ env.APP_VERSION }} , ${{ env.DOCKER_IMAGE }}:latest
       - run: echo "🍏 This job's status is ${{ job.status }}."
 
