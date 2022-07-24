@@ -23,7 +23,8 @@ jobs:
       - run: npm ci       
       - run: npm run build --if-present
       - run: npm test
-      - run: |
+      - name: "Show result: ${{ job.status }}"
+        run: |
               if [[ "${{ job.status }}" == "success" ]]; then
                   echo "🎉 This job's status is ${{ job.status }} 👍."
               else
