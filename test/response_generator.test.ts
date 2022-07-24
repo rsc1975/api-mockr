@@ -222,4 +222,51 @@ describe('Testing response generators', () => {
         expect(response2).to.be.an.object();
         expect(response2).to.be.empty();
     });
+
+
+    it('checks error configured response', async () => {
+        const newConfig : MockerConfig = {
+            $error$: {
+                success: false,
+                error: '${error}'
+            }
+        }
+
+        const respGenerator : ResponseGenerator = new ResponseGenerator(await createRequest('/api/user'), newConfig, '/api');
+        let response : any = respGenerator.generateError("Prueba", 404);
+        
+        expect(response.payload.success).to.be.false();
+        expect(response.payload.error).to.be.equal("Prueba");
+        expect(response.httpStatus).to.be.equal(404);
+
+        response = respGenerator.generateError(undefined, 700);
+        expect(response.payload.success).to.be.false();
+        expect(response.payload.error).to.be.equal("Error in request to path: /api/user");
+        expect(response.httpStatus).to.be.equal(500);
+        response = respGenerator.generateError(undefined, 100);
+        expect(response.httpStatus).to.be.equal(500);
+        response = respGenerator.generateError();
+        expect(response.httpStatus).to.be.equal(500);
+        const newConfig2 : MockerConfig = {
+            $error$: {
+                $httpStatus$: 418,
+                success: false
+            }
+        }
+        const respGenerator2 : ResponseGenerator = new ResponseGenerator(await createRequest('/api/user'), newConfig2, '/api');
+        response = respGenerator2.generateError();
+        expect(response.httpStatus).to.be.equal(418);
+
+
+
+    });
+
+    it('checks error non configured response', async () => {
+
+        const respGenerator : ResponseGenerator = new ResponseGenerator(await createRequest('/api/user'), {}, '/api');
+        let response : any = respGenerator.generateError();
+        expect(response.httpStatus).to.be.equal(500);
+        expect(response.payload.success).to.be.false();
+
+    });
 });

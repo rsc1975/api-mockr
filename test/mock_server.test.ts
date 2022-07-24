@@ -18,7 +18,8 @@ describe('Testing server management', () => {
                 success: true
             },
             $error$: {
-                success: false
+                success: false,
+                error: "${error}"
             }
         }
         mockServer = new MockServer({responseConfig});
@@ -52,7 +53,8 @@ describe('Testing server management', () => {
                 'x-mocker-force-error': '400',
             }
         });
-        expect(res.payload).to.be.equals('FORCED ERROR: 400');
+        let payload = JSON.parse(res.payload);
+        expect(payload.success).to.be.false();
         expect(res.statusCode).to.be.equals(400);
 
         res = await mockServer.server.inject({
@@ -64,7 +66,9 @@ describe('Testing server management', () => {
 
             }
         });
-        expect(res.payload).to.be.equal('Custom error msg');
+        payload = JSON.parse(res.payload);
+        expect(payload.success).to.be.false();
+        expect(payload.error).to.be.equal('Custom error msg');
         expect(res.statusCode).to.be.equal(500);
     });
 

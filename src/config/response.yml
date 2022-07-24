@@ -7,7 +7,7 @@ $defaultResponse$:
 $error$:
   $httpStatus$: 500
   success: false
-  error: "Error occurred for request: ${request.path}"
+  error: "${error}"
   request:
     body: ${request.payload}
     params: ${request.params}

@@ -82,9 +82,10 @@ export class MockServer {
             const { headers } : any = req;
             const errorCode = +headers['x-mocker-force-error'];
             if (!!errorCode) {                
-                const errorMsg = headers['x-mocker-error-msg'] || `FORCED ERROR: ${errorCode}`;
-
-                return h.response(errorMsg).code(errorCode < 600 ? errorCode : 500).takeover();
+                const errorMsg = headers['x-mocker-error-msg'];
+                const responseGenerator = new ResponseGenerator(req, this.responseConfig, this.apiPrefix);
+                const errorResponse = responseGenerator.generateError(errorMsg, errorCode);
+                return h.response(errorResponse.payload).code(errorResponse.httpStatus).takeover();
             }
             return h.continue;
         });

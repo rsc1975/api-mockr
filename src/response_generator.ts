@@ -3,6 +3,14 @@ import { ParamValues } from "./param_values_generator";
 
 import { MockerConfig, HttpMethod, deepCopy, AllPathMatchers, PathMatcher, SingleResponseConfig, HttpMethodRoutesConfig } from './routes_config';
 
+/**
+ * Error response
+ */
+type ErrorResponse = {
+  payload: object;
+  httpStatus: number;
+}
+
 
 /**
  * Reference to one variable in config routes to be generated
@@ -281,6 +289,23 @@ export class ResponseGenerator {
       return responseTemplate;
     }
 
+  }
+
+  public generateError(errorMessage?: string, httpStatus?: number): ErrorResponse {
+    if (!errorMessage) {
+      errorMessage = "Error in request to path: ${request.path}"
+    }
+    let errorTemplate = this.config.$error$ || { success: false };
+    const errorTemplateJson : string = JSON.stringify(errorTemplate);
+    errorTemplate = JSON.parse(errorTemplateJson.replace(/\${error}/g, errorMessage));
+    const refValues = this.findAllGeneratedValues(errorTemplate);    
+    refValues.filter(rv => rv instanceof RefValueObject).forEach(rv  => this.generateValueObj(rv as RefValueObject));
+    
+    httpStatus = (<any>errorTemplate).$httpStatus$ || httpStatus || 500;
+    if (httpStatus! < 200 || httpStatus! >= 600) {
+      httpStatus = 500;
+    }
+    return {payload: errorTemplate, httpStatus: httpStatus!} ;
   }
 }
 
