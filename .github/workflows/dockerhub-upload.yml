@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-test
     env:
-      DOCKER_ID: ${DOCKER_ID:dvlprtech}
+      DOCKER_ID: dvlprtech
     steps:
       - name: Login to DockerHub
         uses: docker/login-action@v2
