@@ -18,12 +18,11 @@ jobs:
         with:
           username: ${{ env.DOCKER_ID }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}    
-      - run: echo "APP_VERSION=$(npm run --silent version)" >> .env
-      - run: export APP_VERSION2=$(npm run --silent version)
-      - run: "echo APP_VERSION = ${{ env.APP_VERSION }} $APP_VERSION2"
+      - run: npm run --silent version
+      - run: echo "APP_VERSION=$(npm run --silent version)" >> $GITHUB_ENV
+      - run: echo "APP_VERSION = ${APP_VERSION}"
       - run: echo "APP_NAME=api-mocker" >> $GITHUB_ENV
-      - run: echo "DOCKER_IMAGE=${{ env.DOCKER_ID }}/${{env.APP_NAME}}" >> $GITHUB_ENV
-      - run: export DOCKER_IMAGE=${{ env.DOCKER_ID }}/${APP_NAME}
+      - run: echo "DOCKER_IMAGE=${{ env.DOCKER_ID }}/${APP_NAME}" >> $GITHUB_ENV
       - run: "echo App ${DOCKER_IMAGE}"
       - name: Build and push
         uses: docker/build-push-action@v3
