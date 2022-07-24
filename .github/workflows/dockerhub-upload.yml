@@ -10,6 +10,11 @@ jobs:
   upload-dockerhub:
     runs-on: ubuntu-latest
     needs: build-and-test
+    env:
+      - name: DOCKER_ID
+        value: ${DOCKER_ID:dvlprtech}
     steps:
+      - run: export APP_VERSION=$(node -p "require('./package.json').version.replace(/\.0$/, '')")
+      - run: echo App Version: $APP_VERSION
       - run: echo "🍏 This job's status is ${{ job.status }}."
 

@@ -99,8 +99,8 @@ export class MockServer {
     }
 
     async start() : Promise<void> {       
-        await this.server.initialize();
-        this.server.log('info', `Server running at: ${this.server.info.uri}`);
+        await this.server.initialize();        
+        console.log(`Server running at: ${this.server.info.uri}`);
         return this.server.start();
     }
 
