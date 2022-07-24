@@ -8,7 +8,7 @@ on:
       APP_VERSION:
         description: "App version"
         value: ${{ jobs.test-and-coverage.outputs.APP_VERSION }}  
-        
+
 jobs:
   test-and-coverage:
     runs-on: ubuntu-latest
@@ -37,11 +37,11 @@ jobs:
       - id: set_version
         run: |
               echo "APP_VERSION=$(npm run --silent version)" >> $GITHUB_ENV
-              echo "::set-output name=version::${APP_VERSION}"
+              echo "::set-output name=version::${{ env.APP_VERSION}}"
       - id: set_name
         run: |
               echo APP_NAME=$(node -p "require('./package.json').name") >> $GITHUB_ENV              
-              echo "::set-output name=name::${APP_NAME}"
+              echo "::set-output name=name::${{ env.APP_NAME }}"
       - name: "Show result: ${{ job.status }}"
         run: |
               if [[ "${{ job.status }}" == "success" ]]; then
