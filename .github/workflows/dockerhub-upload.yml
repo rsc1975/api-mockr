@@ -18,7 +18,6 @@ jobs:
         with:
           username: ${{ env.DOCKER_ID }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}    
-      - run: npm run --silent version
       - run: |
               echo "APP_VERSION=${{needs.build-and-test.outputs.APP_VERSION}}" >> $GITHUB_ENV
               echo "APP_NAME=${{needs.build-and-test.outputs.APP_NAME}}" >> $GITHUB_ENV
