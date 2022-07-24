@@ -1,7 +1,14 @@
 name: Launching tests and coverage
 on:
   workflow_call:
-  
+    outputs:
+      APP_NAME:
+        description: "App version"
+        value: ${{ jobs.test-and-coverage.outputs.APP_NAME }}
+      APP_VERSION:
+        description: "App version"
+        value: ${{ jobs.test-and-coverage.outputs.APP_VERSION }}  
+        
 jobs:
   test-and-coverage:
     runs-on: ubuntu-latest
