@@ -19,9 +19,10 @@ jobs:
           username: ${{ env.DOCKER_ID }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}    
       - run: |
-              echo "APP_VERSION=${{needs.build-and-test.outputs.APP_VERSION}}" >> $GITHUB_ENV
+              echo "${{ toJSON(needs.build-and-test.outputs) }}"
+              echo "APP_VERSION=${{needs.build-and-test.outputs.app_version}}" >> $GITHUB_ENV
               echo "APP_NAME=${{needs.build-and-test.outputs.APP_NAME}}" >> $GITHUB_ENV
-      - run: echo "DOCKER_IMAGE=${{ env.DOCKER_ID }}/${APP_NAME}" >> $GITHUB_ENV
+      - run: echo "DOCKER_IMAGE=${{ env.DOCKER_ID }}/${{ env.APP_NAME }}" >> $GITHUB_ENV
       - run: "echo App ${DOCKER_IMAGE}"
       - name: Build and push
         uses: docker/build-push-action@v3
