@@ -15,6 +15,6 @@ jobs:
         value: ${DOCKER_ID:dvlprtech}
     steps:
       - run: export APP_VERSION=$(npm run --silent version)
-      - run: echo App Version: $APP_VERSION
+      - run: "echo App Version: $APP_VERSION"
       - run: echo "🍏 This job's status is ${{ job.status }}."
 
