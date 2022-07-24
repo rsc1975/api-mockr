@@ -305,6 +305,7 @@ export class ResponseGenerator {
     if (httpStatus! < 200 || httpStatus! >= 600) {
       httpStatus = 500;
     }
+    delete errorTemplate.$httpStatus$;
     return {payload: errorTemplate, httpStatus: httpStatus!} ;
   }
 }

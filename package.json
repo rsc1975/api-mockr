@@ -1,6 +1,6 @@
 {
   "name": "api-mocker",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Server with an API REST designed to imitiate response from third-parties. It'll help testing external integrations",
   "main": "src/index.ts",
   "scripts": {
