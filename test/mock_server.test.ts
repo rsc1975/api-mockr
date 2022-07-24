@@ -13,7 +13,15 @@ describe('Testing server management', () => {
     let mockServer : MockServer;
 
     before(() => {
-        mockServer = new MockServer();
+        const responseConfig = {
+            $defaultResponse$: {
+                success: true
+            },
+            $error$: {
+                success: false
+            }
+        }
+        mockServer = new MockServer({responseConfig});
         process.env.NODE_ENV = 'test';
     });
     afterEach(() => {

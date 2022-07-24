@@ -37,6 +37,7 @@ describe('Testing CLI parser', () => {
         
         Sinon.stub(fs, 'existsSync').withArgs('fichero1.yml').returns(true)
                     .withArgs('fichero2.yml').returns(true);
+        Sinon.stub(fs, 'readFileSync').returns("$defaultResponse$:\n    success: true\n");
 
         const params = getParams();
         expect(params).to.be.an.object();

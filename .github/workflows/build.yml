@@ -4,10 +4,10 @@ on:
     outputs:
       APP_NAME:
         description: "App version"
-        value: ${{ jobs.test-and-coverage.outputs.APP_NAME }}
+        value: ${{ jobs.build.outputs.APP_NAME }}
       APP_VERSION:
         description: "App version"
-        value: ${{ jobs.test-and-coverage.outputs.APP_VERSION }}  
+        value: ${{ jobs.build.outputs.APP_VERSION }}  
 
 jobs:
   build:
