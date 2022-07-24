@@ -1,17 +1,19 @@
 FROM node:lts-slim
 
-RUN mkdir /app
+RUN mkdir /app /config
+
+VOLUME /config
 
 WORKDIR /app
 
-COPY build/* ./
-COPY node_modules ./node_modules
+ADD dist ./
 
 RUN echo '\
 #!/usr/bin/env bash\n \
 echo Launching api-mocker...\n \
-node ./index.js\n ' > entrypoint.sh
+node ./api-mocker.js $MOCKER_PARAMS\n ' > entrypoint.sh
 RUN chmod +x entrypoint.sh 
 
-ENTRYPOINT [ "bash", "-c" ]
+ENV MOCKER_PARAMS=""
+
 CMD [ "./entrypoint.sh" ]

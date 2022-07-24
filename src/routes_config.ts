@@ -89,7 +89,16 @@ class Merger {
 export const deepMerge = Merger.deepMerge;
 export const deepCopy = Merger.deepCopy;
 
-export const defaultResponseConfig: MockerConfig = yaml.load(readFileSync(path.join(__dirname, 'config', 'response.yml'), 'utf8')) as MockerConfig;
+export const loadConfigFile = (filePath: string): MockerConfig => {
+    const configFile = readFileSync(filePath, 'utf8');
+    const config = yaml.load(configFile) as MockerConfig;
+    validateConfigSchema(config);
+    return config;
+}
+
+
+export const defaultResponseConfig: MockerConfig = loadConfigFile(path.join(__dirname, 'config', 'response.yml'));
+
 
 /**
  * Checks is config object is valid
