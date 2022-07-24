@@ -1,7 +1,12 @@
-name: GitHub Actions for api-mocker lib
-on: [push]
+name: GitHub Actions for QA & coverage
+on:
+  workflow_call:
+  push:
+    branches:
+      - main
+  
 jobs:
-  Test-Coverage:
+  test-and-coverage:
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
@@ -21,9 +26,4 @@ jobs:
       - run: npm ci       
       - run: npm run build --if-present
       - run: npm test
-      - name: Upload coverage reports to Codecov
-        run: |
-          curl -Os https://uploader.codecov.io/latest/linux/codecov
-          chmod +x codecov
-          ./codecov -t ${CODECOV_TOKEN} 
       - run: echo "🍏 This job's status is ${{ job.status }}."
