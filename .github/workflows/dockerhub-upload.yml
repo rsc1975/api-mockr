@@ -5,7 +5,7 @@ on:
       - main
 jobs:
   test:
-    uses: ./.github/workflows/qo-coverage.yml
+    uses: ./.github/workflows/qa-coverage.yml
   build:
     uses: ./.github/workflows/build.yml
     
