@@ -33,8 +33,7 @@ jobs:
               echo "::set-output name=version::${APP_VERSION}"
       - id: set_name
         run: |
-              echo APP_NAME=$(node -p "require('./package.json').name") >> $GITHUB_ENV
-              chmod 755 prueba.sh
+              echo APP_NAME=$(node -p "require('./package.json').name") >> $GITHUB_ENV              
               echo "::set-output name=name::${APP_NAME}"
       - name: "Show result: ${{ job.status }}"
         run: |
