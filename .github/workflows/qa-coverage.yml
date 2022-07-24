@@ -24,9 +24,9 @@ jobs:
       - run: npm run build --if-present
       - run: npm test
       - run: |
-        if "${{ job.status }}" == "success" ; then
-            echo "🎉 This job's status is ${{ job.status }} 👍."
-        else
-            echo "😥 This job's status is ${{ job.status }} 👎."
-        fi
+              if [[ "${{ job.status }}" == "success" ]]; then
+                  echo "🎉 This job's status is ${{ job.status }} 👍."
+              else
+                  echo "😥 This job's status is ${{ job.status }} 👎."
+              fi
 
