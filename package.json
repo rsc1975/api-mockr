@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon",
     "build": "tsc && copyfiles -u 1 src/**/*.yml build/app/",
-    "test": "lab "
+    "test": "lab",
+    "version": "node -p \"require('./package.json').version.replace(/\\.0$/, '')\""
   },
   "repository": {
     "type": "git",

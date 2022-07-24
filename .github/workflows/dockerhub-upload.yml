@@ -14,7 +14,7 @@ jobs:
       - name: DOCKER_ID
         value: ${DOCKER_ID:dvlprtech}
     steps:
-      - run: export APP_VERSION=$(node -p "require('./package.json').version.replace(/\.0$/, '')")
+      - run: export APP_VERSION=$(npm run --silent version)
       - run: echo App Version: $APP_VERSION
       - run: echo "🍏 This job's status is ${{ job.status }}."
 
