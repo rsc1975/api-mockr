@@ -22,8 +22,8 @@ jobs:
         name: Upload coverage reports to Codecov
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
-          files: 'lcov.info'
+          working-directory: ./src
+          files: ['lcov.info', '../lcov.info']
           
       - run: echo "🍏 This job's status is ${{ job.status }}."
