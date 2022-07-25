@@ -10,8 +10,8 @@ ADD dist ./
 
 RUN echo '\
 #!/usr/bin/env bash\n \
-echo Launching api-mocker...\n \
-node ./api-mocker.js $MOCKER_PARAMS\n ' > entrypoint.sh
+echo Launching api-mockr...\n \
+node ./api-mockr.js $MOCKER_PARAMS\n ' > entrypoint.sh
 RUN chmod +x entrypoint.sh 
 
 ENV MOCKER_PARAMS=""

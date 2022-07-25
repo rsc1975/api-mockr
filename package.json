@@ -1,18 +1,18 @@
 {
-  "name": "api-mocker",
-  "version": "0.9.1",
-  "description": "Server with an API REST designed to imitiate response from third-parties. It'll help testing external integrations",
+  "name": "api-mockr",
+  "version": "0.9.2",
+  "description": "Just another API mocker that can be configured to response random and specific data",
   "main": "src/index.ts",
   "scripts": {
     "start": "nodemon",
     "dev": "nodemon",
-    "build": "copyfiles -u 1 src/**/*.yml ./dist && esbuild src/index.ts --bundle --minify --outfile=./dist/api-mocker.js --platform=node",
+    "build": "copyfiles -u 1 src/**/*.yml ./dist && esbuild src/index.ts --bundle --minify --outfile=./dist/api-mockr.js --platform=node",
     "test": "lab",
     "version": "node -p \"require('./package.json').version.replace(/\\.0$/, '')\""
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@gitlab.com/qo-oss/api-mocker.git"
+    "url": "git@github.com:rsc1975/api-mockr.git"
   },
   "keywords": [
     "api",
@@ -23,9 +23,9 @@
   "author": "Roberto Sánchez",
   "license": "MIT",
   "bugs": {
-    "url": "https://gitlab.com/qo-oss/api-mocker/issues"
+    "url": "https://github.com/rsc1975/api-mockr/issues"
   },
-  "homepage": "https://gitlab.com/qo-oss/api-mocker#readme",
+  "homepage": "https://github.com/rsc1975/api-mockr",
   "dependencies": {
     "@hapi/hapi": "^20.2.2",
     "@ngneat/falso": "^6.0.2",
