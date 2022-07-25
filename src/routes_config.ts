@@ -89,9 +89,13 @@ class Merger {
 export const deepMerge = Merger.deepMerge;
 export const deepCopy = Merger.deepCopy;
 
+function isYaml(file: string): boolean {
+    return file.endsWith('.yaml') || file.endsWith('.yml');
+}
+
 export const loadConfigFile = (filePath: string): MockerConfig => {
-    const configFile = readFileSync(filePath, 'utf8');
-    const config = yaml.load(configFile) as MockerConfig;
+    const configFileContent = readFileSync(filePath, 'utf8');
+    const config = isYaml(filePath) ? yaml.load(configFileContent) : JSON.parse(configFileContent);
     validateConfigSchema(config);
     return config;
 }
