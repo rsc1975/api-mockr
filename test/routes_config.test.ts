@@ -1,16 +1,22 @@
 
-import { deepCopy, defaultResponseConfig, getConfig, MockerConfig } from '../src/routes_config';
+import { deepCopy, defaultResponseConfig, getConfig, loadConfigFile, MockerConfig, SingleResponseConfig } from '../src/routes_config';
 
 import Code, { fail } from '@hapi/code';
 import Lab from '@hapi/lab';
+import Sinon from 'sinon';
+import fs from 'fs';
 
 const { expect } = Code;
-const { it, describe, before } = exports.lab = Lab.script();
+const { it, describe, before, afterEach } = exports.lab = Lab.script();
 
 describe('Testing routes config', () => {
 
     before(() => {
         process.env.NODE_ENV = 'test';
+    });
+
+    afterEach(() => {
+        Sinon.restore();
     });
 
     function evalDefaultConfig(conf: MockerConfig) : void{
@@ -91,6 +97,38 @@ describe('Testing routes config', () => {
         const objCopy = deepCopy(obj!);
         expect(objCopy).to.be.an.object();
         expect(objCopy).to.be.empty();
+    });
+
+    it('checks loadConfigFile JSON file', () => {
+        
+        Sinon.stub(fs, 'existsSync').withArgs('fichero3.json').returns(true);
+
+        Sinon.stub(fs, 'readFileSync')
+            .withArgs('fichero3.json', 'utf8').returns('{ "$defaultResponse$": { "result": true} }');
+        
+        const conf = loadConfigFile('fichero3.json');
+        expect(conf).to.be.an.object();
+        expect(conf.$defaultResponse$).to.be.an.object();
+        expect((<SingleResponseConfig>conf.$defaultResponse$)!.result).to.be.true();
+        
+    });
+
+    it('checks loadConfigFile YAML file', () => {
+        
+        Sinon.stub(fs, 'existsSync').withArgs('fichero1.yml').returns(true)
+        .withArgs('fichero2.yaml').returns(true);
+
+        Sinon.stub(fs, 'readFileSync').returns("$defaultResponse$:\n    success: true\n");
+        
+        let conf = loadConfigFile('fichero1.yml');
+        expect(conf).to.be.an.object();
+        expect(conf.$defaultResponse$).to.be.an.object();
+        expect((<SingleResponseConfig>conf.$defaultResponse$)!.success).to.be.true();
+        conf = loadConfigFile('fichero2.yaml');
+        expect(conf).to.be.an.object();
+        expect(conf.$defaultResponse$).to.be.an.object();
+        expect((<SingleResponseConfig>conf.$defaultResponse$)!.success).to.be.true();
+        
     });
 
 
