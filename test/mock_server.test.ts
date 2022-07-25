@@ -116,7 +116,7 @@ describe('Testing server management', () => {
 
     
     it('Server env params', async () => {
-        process.env.MOCKER_PREFIX = '/test';
+        process.env.MOCKER_PREFIX = 'test';
         process.env.MOCKER_BINDING = 'localhost';
         process.env.MOCKER_PORT = '5555';
 
@@ -152,8 +152,6 @@ describe('Testing server management', () => {
         Sinon.assert.match(logConsole.getCall(1).args[0], /GET.*api\/different/);
 
     });
-
-
     
     
 });
