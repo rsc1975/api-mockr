@@ -193,13 +193,78 @@ describe('Testing params values generator', () => {
         expect(valueMale).to.be.string();
         expect(valueMale.split(' ').length).to.be.equals(1);        
     });
+    it('checks ParamValues for random params', async () => {
+        let value = ParamValues.get('random.url') as string;
+        expect(value).to.startsWith('http');
 
-    it('checks ParamValues for random.personLastName', async () => {
-        const value = ParamValues.get('random.personLastName') as string;
+        value = ParamValues.get('random.city') as string;
+        expect(value).to.be.string().not.to.be.empty();
+        value = ParamValues.get('random.phone') as string;
+        expect(value).to.be.string().not.to.be.empty();
+        value = ParamValues.get('random.country') as string;
+        expect(value).to.be.string().not.to.be.empty();
+        value = ParamValues.get('random.sport') as string;
+        expect(value).to.be.string().not.to.be.empty();
+        value = ParamValues.get('random.brand') as string;
+        expect(value).to.be.string().not.to.be.empty();
+        value = ParamValues.get('random.company') as string;
+        expect(value).to.be.string().not.to.be.empty();
+        value = ParamValues.get('random.username') as string;
+        expect(value).to.be.string().not.to.be.empty();
+        value = ParamValues.get('random.department') as string;
+        expect(value).to.be.string().not.to.be.empty();
+        value = ParamValues.get('random.jobTitle') as string;
+        expect(value).to.be.string().not.to.be.empty();
+        value = ParamValues.get('random.phrase') as string;
+        expect(value).to.be.string().not.to.be.empty();
+        value = ParamValues.get('random.countryCode') as string;
+        expect(value).to.be.string().match(/^[\w]+$/);
+        value = ParamValues.get('random.zipCode') as string;
+        expect(value).to.be.string().match(/^[\d-]+$/)
+        value = ParamValues.get('random.filePath') as string;
+        expect(value).to.be.string().match(/^[\d-_\+.\/\\\w]+$/)
+        value = ParamValues.get('random.emoji') as string;
+        expect(value).to.be.string().match(/\p{Emoji}/u)
+        value = ParamValues.get('random.ip') as string;
+        expect(value).to.be.string().match(/^[\d]+\.[\d]+\.[\d]+\.[\d]+$/)
+        value = ParamValues.get('random.uuid') as string;
+        expect(value).to.be.string().match(/^[\w\d-]+$/)
+       
+        value = ParamValues.get('random.pastDate') as string;
+        expect(value).to.be.string().match(/^[\d-]+$/);
+        expect(new Date(value).getTime()).to.be.lessThan(new Date().getTime());
+
+        value = ParamValues.get('random.futureDate') as string;
+        expect(value).to.be.string().match(/^[\d-]+$/);
+        expect(new Date(value).getTime()).to.be.greaterThan(new Date().getTime() - 24*60*60*1000);
+
+        value = ParamValues.get('random.datetime') as string;
+        expect(value).to.be.string().match(/^[\d-T:\.Z]+$/);
+        expect(isNaN(new Date(value).getTime())).to.be.false();
+
+    });
+
+    /*      username: () => randUserName(),
+      ip: () => randIp(),
+      uuid: () => randUuid(),
+      : () => randJobArea(),
+      : () => randJobTitle(),
+      : () => randPastDate({ years: 5 }).toISOString().substring(0, 10),
+      futureDate: () => randFutureDate({ years: 5 }).toISOString().substring(0, 10),
+      datetime: () => randPastDate({ years: 5 }).toISOString(),
+      : () => randPhrase(),
+ */
+
+
+
+    it('checks ParamValues for server.isoDatetime', async () => {
+        const value = ParamValues.get('server.isoDatetime') as string;
 
         expect(value).to.be.string();
-        expect(value.split(' ').length).to.be.equals(1);
+        expect(new Date(value).getTime()).to.be.about(new Date().getTime(), 50);
     });
+
+
 
 
     it('checks ParamValues for server.timestamp', async () => {

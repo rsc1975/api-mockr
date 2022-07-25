@@ -18,11 +18,11 @@ export class ParamValues {
       hexColor: () => `#${Math.floor(Math.random() * 16777215).toString(16)}`,
         
       email: (provider?: string, suffix?: string) => randEmail({ provider, suffix }),
-      username: () => randUserName(),
-      url: () => randUrl(),
       personFullName: (gender?: "male" | "female") => randFullName({ gender }),
       personFirstName: (gender?: "male" | "female") => randFirstName({ gender }),
       personLastName: () => randLastName(),
+      username: () => randUserName(),
+      url: () => randUrl(),
       city: () => randAddress().city,
       phone: () => randPhoneNumber(),
       zipCode: () => randZipCode(),
