@@ -17,9 +17,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: code-coverage-report
-      - name: Upload coverage reports to Codecov
-        run: |
-          curl -Os https://uploader.codecov.io/latest/linux/codecov
-          chmod +x codecov
-          ./codecov -t ${CODECOV_TOKEN} 
+      - uses: codecov/codecov-action@v3
+        name: Upload coverage reports to Codecov
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
+          
       - run: echo "🍏 This job's status is ${{ job.status }}."
