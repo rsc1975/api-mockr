@@ -24,6 +24,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
-          gcov_include: "src/**/*.*" 
+          files: 'lcov.info'
           
       - run: echo "🍏 This job's status is ${{ job.status }}."
