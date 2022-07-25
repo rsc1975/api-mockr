@@ -27,7 +27,7 @@ jobs:
         with:
           name: code-coverage-report
           retention-days: 1
-          path: coverage
+          path: coverage/
       - name: "Show result: ${{ job.status }}"
         run: |
               if [[ "${{ job.status }}" == "success" ]]; then
