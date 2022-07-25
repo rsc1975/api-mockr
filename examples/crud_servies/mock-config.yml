@@ -1,0 +1,10 @@
+routes:
+   get:
+      "/users/${username}":
+         controller: users
+         action: index
+      "/users":
+        - $length$: ${random.integer.20}
+          id: ${random.integer.200}
+          numero: ${random.integer}
+          city: ${random.city}

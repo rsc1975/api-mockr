@@ -1,5 +1,5 @@
 import { Request } from "@hapi/hapi";
-import { randAddress, randEmail, randFirstName, randFullName, randLastName } from '@ngneat/falso';
+import { randAddress, randBrand, randCompanyName, randCountry, randCountryCode, randEmail, randEmoji, randFilePath, randFirstName, randFullName, randFutureDate, randIp, randJobArea, randJobTitle, randLastName, randPastDate, randPhoneNumber, randPhrase, randPost, randSports, randUrl, randUser, randUserName, randUuid, randZipCode } from '@ngneat/falso';
 
 
 export class ParamValues {
@@ -14,12 +14,33 @@ export class ParamValues {
       integer: (max: number = Number.MAX_SAFE_INTEGER) => Math.floor(Math.random() * (+max + 1)),
       float: (max: number = 100.0) => Math.random() * (+max),
       boolean: () => Math.random() > 0.5,
+      choose: (...values: string[]) => values[Math.floor(Math.random() * values.length)] || null,
+      hexColor: () => `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+        
       email: (provider?: string, suffix?: string) => randEmail({ provider, suffix }),
+      username: () => randUserName(),
+      url: () => randUrl(),
       personFullName: (gender?: "male" | "female") => randFullName({ gender }),
       personFirstName: (gender?: "male" | "female") => randFirstName({ gender }),
       personLastName: () => randLastName(),
       city: () => randAddress().city,
-      choose: (...values: string[]) => values[Math.floor(Math.random() * values.length)] || null,
+      phone: () => randPhoneNumber(),
+      zipCode: () => randZipCode(),
+      country: () => randCountry(),
+      countryCode: () => randCountryCode(),
+      emoji: () => randEmoji(),
+      brand: () => randBrand(),
+      company: () => randCompanyName(),
+      sport: () => randSports(),
+      filePath: () => randFilePath(),
+      ip: () => randIp(),
+      uuid: () => randUuid(),
+      department: () => randJobArea(),
+      jobTitle: () => randJobTitle(),
+      pastDate: () => randPastDate({ years: 5 }).toISOString().substring(0, 10),
+      futureDate: () => randFutureDate({ years: 5 }).toISOString().substring(0, 10),
+      datetime: () => randPastDate({ years: 5 }).toISOString(),
+      phrase: () => randPhrase(),
     },
     server: {
       timestamp:  () => new Date().getTime(),

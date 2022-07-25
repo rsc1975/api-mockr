@@ -23,7 +23,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           verbose: true # optional (default = false)
-          working-directory: ./src
-          files: "lcov.info, ../lcov.info"
+          files: "lcov.info"
           
       - run: echo "🍏 This job's status is ${{ job.status }}."
