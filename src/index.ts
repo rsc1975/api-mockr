@@ -1,15 +1,23 @@
 import { getParams } from './cli_parser';
 import { MockServer } from './mock_server';
 
-const params = getParams();
 
-const mockServer = new MockServer({...params});
+export const run = async () => {
+    
+    const params = getParams();
 
-mockServer.start();
+    const mockServer = new MockServer({...params});
+    
+    const exitApp = (err: any) => {
+        !!err && console.error(err);
+        process.exit(1);
+    }
+    process.on('unhandledRejection', exitApp);
+    await mockServer.start();
+};
 
-const exitApp = (err: any) => {
-    !!err && console.log(err);
-    process.exit(1);
+if (require.main === module) {
+    run();
 }
 
-process.on('unhandledRejection', exitApp);
+

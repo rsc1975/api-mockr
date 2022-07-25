@@ -22,6 +22,9 @@ export class MockServer {
 
     constructor({host, port, apiPrefix, logRequestData, responseConfig} : MockServerInputParams = {}) {
         this.apiPrefix = apiPrefix || process.env.MOCKER_PREFIX || '/api';
+        if (!this.apiPrefix.startsWith("/")) {
+            this.apiPrefix = "/" + this.apiPrefix;
+          }
         this.host = host || process.env.MOCKER_BINDING || '0.0.0.0';
         this.port = port || +(process.env.MOCKER_PORT || 3003);
         this.logRequestData = !!logRequestData;

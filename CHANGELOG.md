@@ -2,7 +2,7 @@
 
 - Initial version.
 
-## 0.9.1
+## 0.9.2
 
 - Initial beta version.
 
