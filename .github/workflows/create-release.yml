@@ -19,11 +19,11 @@ jobs:
               echo "APP_VERSION=${{needs.build.outputs.app_version}}" >> $GITHUB_ENV
               echo "APP_NAME=${{needs.build.outputs.APP_NAME}}" >> $GITHUB_ENV
       - name: Version Check
-        if: v${{ env.APP_VERSION }} != ${{ GITHUB_REF_NAME }}
+        if: v${{ env.APP_VERSION }} != ${{ github.ref_name }}
         uses: actions/github-script@v3
         with:
           script: |
-            core.setFailed('App version in tag mismatch real code version!!! (v${{ env.APP_VERSION }} != ${{ GITHUB_REF_NAME }})')
+            core.setFailed('App version in tag mismatch real code version!!! (v${{ env.APP_VERSION }} != ${{ github.ref_name }})')
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Create Release
@@ -33,7 +33,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ GITHUB_REF_NAME }}
+          release_name: Release ${{ github.ref_name }}
           body: |
             Changes in this Release
             - First Change
