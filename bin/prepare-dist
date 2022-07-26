@@ -14,7 +14,7 @@ if (existsSync(distDir)) {
 const pkg = require(path.join(__dirname, "..", "package.json"));
 
 pkg.scripts = {
-    "prepack": "copyfiles -u 1 ../src/**/*.* ../src/*.* ../bin/api* ../examples/**/* ../README.md ./"
+    "prepack": "copyfiles -u 1 ../src/**/*.* ../src/*.* ../bin/api* ../examples/**/* ../README.md ../LICENSE  ./"
 };
 delete pkg.files;
 delete pkg.devDependencies;

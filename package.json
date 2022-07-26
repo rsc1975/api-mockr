@@ -27,7 +27,10 @@
   "readme": "README.md",
   "keywords": [
     "api",
+    "rest",
     "mock",
+    "mocker",
+    "mockr",
     "testing",
     "server"
   ],
