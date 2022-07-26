@@ -1,13 +1,14 @@
 {
   "name": "api-mockr",
-  "version": "0.9.3.1",
+  "version": "0.9.4",
   "description": "Just another API mocker that can be configured to response random and specific data",
   "main": "src/index.ts",
   "scripts": {
     "start": "nodemon",
     "dev": "nodemon",
-    "build": "copyfiles -u 1 src/**/*.yml ./dist && esbuild src/index.ts --bundle --minify --outfile=./dist/api-mockr.js --platform=node",
-    "build-dev": "copyfiles -u 1 src/**/*.yml ./dist && esbuild src/index.ts --bundle --outfile=./dist/api-mockr.js --platform=node",
+    "dist": "npm run build && npm run build-dev && ",
+    "build": "node bin/prepare-dist && npm run build-dev && copyfiles -u 1 src/**/*.yml ./dist && esbuild src/index.ts --bundle --minify --outfile=./dist/api-mockr.min.js --platform=node ",
+    "build-dev": "copyfiles -u 1 src/**/*.yml ./dist && esbuild src/index.ts --bundle --outfile=./dist/api-mockr.js --platform=node ",
     "test": "lab",
     "version": "node -p \"require('./package.json').version.replace(/\\.0$/, '')\""
   },
