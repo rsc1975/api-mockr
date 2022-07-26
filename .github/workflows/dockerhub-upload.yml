@@ -1,8 +1,7 @@
 name: Docker image
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [created]
 jobs:
   test:
     uses: ./.github/workflows/qa-coverage.yml
@@ -20,7 +19,6 @@ jobs:
         with:
           username: ${{ env.DOCKER_ID }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - run: ls -ltr
       - name: Download the building artifacts
         uses: actions/download-artifact@v3
         with:
@@ -31,7 +29,6 @@ jobs:
               echo "APP_NAME=${{needs.build.outputs.APP_NAME}}" >> $GITHUB_ENV
       - run: echo "DOCKER_IMAGE=${{ env.DOCKER_ID }}/${{ env.APP_NAME }}" >> $GITHUB_ENV
       - run: echo App ${{env.DOCKER_IMAGE}}
-      - run: ls -ltr
       - name: Build and push
         uses: docker/build-push-action@v3
         with:

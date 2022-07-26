@@ -1,0 +1,26 @@
+name: NPM publish
+on:
+  release:
+    types: [created]
+    
+jobs:
+  test:
+    uses: ./.github/workflows/qa-coverage.yml
+    
+  upload-dockerhub:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - run: npm run build
+      - run: cd dist && npm publish --dry-run --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: echo "🍏 This job's status is ${{ job.status }}."
+

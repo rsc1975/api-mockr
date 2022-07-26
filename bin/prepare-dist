@@ -2,11 +2,10 @@
 'use strict';
 
 const path = require("path");
-const { readdirSync, rmSync, writeFileSync, mkdirSync } = require('fs');
-const { fileExistsSync } = require("tsconfig-paths/lib/filesystem");
+const { existsSync, readdirSync, rmSync, writeFileSync, mkdirSync } = require('fs');
 
 const distDir = path.join(__dirname, "..", "dist");
-if (fileExistsSync(distDir)) {
+if (existsSync(distDir)) {
     readdirSync(distDir).forEach(f => rmSync(`${distDir}/${f}`, { recursive: true }));
 } else {
     mkdirSync(distDir);
@@ -15,7 +14,7 @@ if (fileExistsSync(distDir)) {
 const pkg = require(path.join(__dirname, "..", "package.json"));
 
 pkg.scripts = {
-    "prepack": "copyfiles ../src/**/*.* ../bin/api* ../examples/**/* ./dist"
+    "prepack": "copyfiles -u 1 ../src/**/*.* ../src/*.* ../bin/api* ../examples/**/* ../README.md ./"
 };
 delete pkg.files;
 delete pkg.devDependencies;

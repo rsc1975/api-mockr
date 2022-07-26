@@ -1,6 +1,6 @@
 {
   "name": "api-mockr",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Just another API mocker that can be configured to response random and specific data",
   "main": "src/index.ts",
   "scripts": {
@@ -24,6 +24,7 @@
     "type": "git",
     "url": "git@github.com:rsc1975/api-mockr.git"
   },
+  "readme": "README.md",
   "keywords": [
     "api",
     "mock",
