@@ -7,7 +7,7 @@ jobs:
   test:
     uses: ./.github/workflows/qa-coverage.yml
     
-  upload-dockerhub:
+  upload-npm:
     runs-on: ubuntu-latest
     needs: [test]
     steps:
