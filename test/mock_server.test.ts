@@ -3,7 +3,7 @@
 import Code from '@hapi/code';
 import Lab from '@hapi/lab';
 import { Server } from '@hapi/hapi';
-import { MockServer } from'../src/mock_server';
+import { MockServer, PING_MSG } from'../src/mock_server';
 import Sinon from 'sinon';
 
 const { expect } = Code;
@@ -40,7 +40,7 @@ describe('Testing server management', () => {
             method: 'get',
             url: '/'
         });
-        expect(res.payload).to.be.equal('API Mocker');
+        expect(res.payload).to.be.equal(PING_MSG);
         expect(res.statusCode).to.be.equal(200);
     });
 
