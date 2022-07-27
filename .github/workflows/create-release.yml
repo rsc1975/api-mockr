@@ -32,4 +32,5 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          token: ${{ secrets.RELEASE_CREATION }}
           files: api-mockr-${{ env.APP_VERSION }}.tgz
