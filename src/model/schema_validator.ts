@@ -26,8 +26,8 @@ const configSchema = {
     "type": "object",
     "properties": {
       "_rePath": { type: "array" },
-      "$defaultResponse$": {"$ref": "/Payload"},
-      "$error$": {"$ref": "/Payload"},
+      "defaultResponse": {"$ref": "/Payload"},
+      "errorResponse": {"$ref": "/Payload"},
       "routes": {
         "type": "object",
         "patternProperties": {

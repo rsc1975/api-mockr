@@ -1,10 +1,10 @@
-$defaultResponse$:
+defaultResponse:
   success: true
   request:
     path: ${request.path} 
     body: ${request.payload}
     params: ${request.params}
-$error$:
+errorResponse:
   $httpStatus$: 500
   success: false
   error: "${error}"

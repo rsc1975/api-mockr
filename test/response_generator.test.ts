@@ -145,7 +145,7 @@ describe('Testing response generators', () => {
 
     it('checks response as fixed array', async () => {
         const newConfig : MockerConfig = {
-            $defaultResponse$: [{
+            defaultResponse: [{
                     num: '${random.integer.10}'
                 },{
                     num: '${random.integer.10}',
@@ -162,7 +162,7 @@ describe('Testing response generators', () => {
 
     it('checks default response', async () => {
         const newConfig : MockerConfig = {
-            $defaultResponse$: {
+            defaultResponse: {
                 success: true,
                 request: {
                     path: '${request.path}',
@@ -181,7 +181,7 @@ describe('Testing response generators', () => {
         expect(response.request.params.hola).to.be.equal('caracola');
 
         const newConfig2 : MockerConfig = {
-            $defaultResponse$: {
+            defaultResponse: {
                 success: true
             }, routes: {
                 'get': {
@@ -232,7 +232,7 @@ describe('Testing response generators', () => {
 
     it('checks error configured response', async () => {
         const newConfig : MockerConfig = {
-            $error$: {
+            errorResponse: {
                 success: false,
                 error: '${error}'
             }
@@ -254,7 +254,7 @@ describe('Testing response generators', () => {
         response = respGenerator.generateError(req);
         expect(response.httpStatus).to.be.equal(500);
         const newConfig2 : MockerConfig = {
-            $error$: {
+            errorResponse: {
                 $httpStatus$: 418,
                 success: false
             }

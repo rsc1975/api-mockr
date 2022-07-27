@@ -20,7 +20,7 @@ const okConfig = {
 }
 
 const badConfig = {
-  "$defaultResponse$2": {
+  "defaultResponse2": {
   },
   "routes": {
     "*": {
@@ -32,7 +32,7 @@ const badConfig = {
 }
 
 const badConfig2 = {
-  "$defaultResponse$": {
+  "defaultResponse": {
   },
   "routes": {
     "wrong_method": {
@@ -63,7 +63,7 @@ describe('Testing Config model validator', () => {
       const r = validateConfigSchema(badConfig);
       expect(r.valid).to.be.false();      
       expect(r.errors.length).to.equal(1);
-      expect(r.errors[0].argument).to.be.equal("$defaultResponse$2");      
+      expect(r.errors[0].argument).to.be.equal("defaultResponse2");      
     });
     
     it('checks valid method name', () => {

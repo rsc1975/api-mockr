@@ -27,11 +27,11 @@ export type MockerConfig = {
     /**
      * Default response to return when no route is matched
      */
-     $defaultResponse$?: SingleResponseConfig | ArrayResponseConfig;
+    defaultResponse?: SingleResponseConfig | ArrayResponseConfig;
     /**
      * Default response on errors
      */
-     $error$?: SingleResponseConfig;
+    errorResponse?: SingleResponseConfig;
     /**
      * All routes configured by http method
      */

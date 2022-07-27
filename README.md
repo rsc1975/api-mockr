@@ -125,3 +125,35 @@ $ curl -H "x-mocker-force-error: 418" -H 'x-mocker-error-msg: ERROR: ${random.em
 
 The emoji and the error phrase will be different with each call.
 
+## Server configuration
+
+The config files can be read in YAML and JSON formats, the default config file is like this:
+
+```yaml
+defaultResponse:
+  success: true
+  request:
+    path: ${request.path} 
+    body: ${request.payload}
+    params: ${request.params}
+errorResponse:
+  $httpStatus$: 500
+  success: false
+  error: "${error}"
+  request:
+    body: ${request.payload}
+    params: ${request.params}
+routes:
+  "*": # HTTP Method
+    "*": # Path
+      success: true 
+      request: 
+        path: ${request.path}         
+        params: ${request.params}
+```
+
+There are 3 main sections in the config file:
+
+* `defaultResponse`: The default response to be returned when there is no match for the request path and the configured routes
+* `errorResponse`: The error response payload to be returned when an error occurs.
+* `routes`: The routes to be mocked grouped by HTTP method (get, post, put, ...). A wildcard can be used to match any method and/or any path.

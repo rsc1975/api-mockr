@@ -14,10 +14,10 @@ describe('Testing server management', () => {
 
     before(() => {
         const responseConfig = {
-            $defaultResponse$: {
+            defaultResponse: {
                 success: true
             },
-            $error$: {
+            errorResponse: {
                 success: false,
                 error: "${error}"
             }

@@ -21,8 +21,8 @@ describe('Testing routes config', () => {
 
     function evalDefaultConfig(conf: MockerConfig) : void{
         expect(conf).to.be.an.object();
-        expect(conf['$defaultResponse$']!['success']).to.be.true;
-        expect(conf['$error$']!['success']).to.be.false;
+        expect(conf['defaultResponse']!['success']).to.be.true;
+        expect(conf['errorResponse']!['success']).to.be.false;
         expect(conf['routes']!['*']).to.be.an.object();
         expect(conf['routes']!['*']!['*']).to.be.an.object();
         expect(conf['routes']!['*']!['*']['success']).to.be.true;
@@ -52,7 +52,7 @@ describe('Testing routes config', () => {
             }
         };
         const composedConfig = getConfig(newconfig as MockerConfig);
-        expect(composedConfig.$defaultResponse$!['success']).to.be.true;
+        expect(composedConfig.defaultResponse!['success']).to.be.true;
         expect(composedConfig.routes!['*']!["/${id}"]).to.be.an.object();
         expect(composedConfig.routes!['*']!["/${id}"]['success']).to.be.false;
         expect(composedConfig.routes!['*']!["/${id}"]['data']).to.be.array;
@@ -104,12 +104,12 @@ describe('Testing routes config', () => {
         Sinon.stub(fs, 'existsSync').withArgs('fichero3.json').returns(true);
 
         Sinon.stub(fs, 'readFileSync')
-            .withArgs('fichero3.json', 'utf8').returns('{ "$defaultResponse$": { "result": true} }');
+            .withArgs('fichero3.json', 'utf8').returns('{ "defaultResponse": { "result": true} }');
         
         const conf = loadConfigFile('fichero3.json');
         expect(conf).to.be.an.object();
-        expect(conf.$defaultResponse$).to.be.an.object();
-        expect((<SingleResponseConfig>conf.$defaultResponse$)!.result).to.be.true();
+        expect(conf.defaultResponse).to.be.an.object();
+        expect((<SingleResponseConfig>conf.defaultResponse)!.result).to.be.true();
         
     });
 
@@ -118,16 +118,16 @@ describe('Testing routes config', () => {
         Sinon.stub(fs, 'existsSync').withArgs('fichero1.yml').returns(true)
         .withArgs('fichero2.yaml').returns(true);
 
-        Sinon.stub(fs, 'readFileSync').returns("$defaultResponse$:\n    success: true\n");
+        Sinon.stub(fs, 'readFileSync').returns("defaultResponse:\n    success: true\n");
         
         let conf = loadConfigFile('fichero1.yml');
         expect(conf).to.be.an.object();
-        expect(conf.$defaultResponse$).to.be.an.object();
-        expect((<SingleResponseConfig>conf.$defaultResponse$)!.success).to.be.true();
+        expect(conf.defaultResponse).to.be.an.object();
+        expect((<SingleResponseConfig>conf.defaultResponse)!.success).to.be.true();
         conf = loadConfigFile('fichero2.yaml');
         expect(conf).to.be.an.object();
-        expect(conf.$defaultResponse$).to.be.an.object();
-        expect((<SingleResponseConfig>conf.$defaultResponse$)!.success).to.be.true();
+        expect(conf.defaultResponse).to.be.an.object();
+        expect((<SingleResponseConfig>conf.defaultResponse)!.success).to.be.true();
         
     });
 

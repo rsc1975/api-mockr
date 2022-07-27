@@ -161,7 +161,7 @@ export class ResponseGenerator {
       methodRouteConfig = this.config.routes![method] || this.config.routes!['*'];
     }
     if (!methodRouteConfig) {
-      return this.config.$defaultResponse$ || {};
+      return this.config.defaultResponse || {};
     }
     const path = request.url.pathname.substring(this.apiPrefix.length);
 
@@ -169,7 +169,7 @@ export class ResponseGenerator {
     const matchedPath = pathMatchers.find(m => m.re?.test(path) || m.path === path || m.path === '*');
     
     if (!matchedPath) {
-      return this.config.$defaultResponse$ || {};
+      return this.config.defaultResponse || {};
     } else {
       this.matchedPath = matchedPath.path;
       this.pathVars = matchedPath.re?.exec(path)!.slice(1).reduce((acc, v, i) => {
@@ -293,7 +293,7 @@ export class ResponseGenerator {
     if (!errorMessage) {
       errorMessage = "Error in request to path: ${request.path}"
     }
-    let errorTemplate = this.config.$error$ || { success: false };
+    let errorTemplate = this.config.errorResponse || { success: false };
     
     const errorTemplateJson : string = JSON.stringify(errorTemplate);
     errorTemplate = JSON.parse(errorTemplateJson.replace(/\${error}/g, errorMessage));
