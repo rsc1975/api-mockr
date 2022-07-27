@@ -15,12 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, build]
     steps:
-      - run: |
+      - name: Variables
+        run: |
               echo "APP_VERSION=${{needs.build.outputs.app_version}}" >> $GITHUB_ENV
               echo "APP_NAME=${{needs.build.outputs.APP_NAME}}" >> $GITHUB_ENV
-              echo "${{ format('{{v{0}}}', env.APP_VERSION) }} ${{ format('v{0}', env.APP_VERSION) }} != ${{ github.ref_name }}"
+      - name: Variables check
+        run: |
+              echo ${{ env.APP_VERSION }} "${{ format('v{0}', env.app_version) }} != ${{ github.ref_name }}"
       - name: Version Check
-        if: ${{ format('v{0}', env.APP_VERSION) }} != ${{ github.ref_name }}
+        if: format('v{0}', ${{ env.APP_VERSION }}) != ${{ github.ref_name }}
         uses: actions/github-script@v3
         with:
           script: |
