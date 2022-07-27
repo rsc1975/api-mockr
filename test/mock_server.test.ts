@@ -72,12 +72,12 @@ describe('Testing server management', () => {
 
         res = await mockServer.server.inject({
             method: 'get',
-            url: '/api/whatever?_forceError=404',
+            url: '/api/whatever?_forceError=true',
             
         });
         payload = JSON.parse(res.payload);
         expect(payload.success).to.be.false();
-        expect(res.statusCode).to.be.equal(404);
+        expect(res.statusCode).to.be.equal(500);
     });
 
     it('Server no api call error', async () => {

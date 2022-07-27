@@ -87,8 +87,9 @@ export class MockServer {
 
         srv.ext('onRequest', (req : Request, h : ResponseToolkit) => {
             const { headers } : any = req;
-            const errorCode = +headers[FORCE_ERROR_HEADER] || +req.query[FORCE_ERROR_PARAM];
-            if (!!errorCode) {                
+            const forceError = !!req.query[FORCE_ERROR_PARAM];
+            const errorCode = +headers[FORCE_ERROR_HEADER];
+            if (!!errorCode || forceError) {                
                 const errorMsg = headers[FORCE_ERROR_MSG_HEADER];
                 const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
                 const errorResponse = responseGenerator.generateError(req, errorMsg, errorCode);
