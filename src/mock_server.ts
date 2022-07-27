@@ -11,6 +11,7 @@ interface MockServerInputParams {
     apiPrefix?: string;
 }
 
+const PING_MSG = 'API Mockr\n';
 const PRETTY_PARAM = '_pretty';
 const FORCE_ERROR_PARAM = '_forceError';
 const FORCE_ERROR_HEADER = 'x-mocker-force-error';
@@ -51,7 +52,7 @@ export class MockServer {
         srv.route({
             method: 'GET',
             path: '/',
-            handler: (_, __) => 'API Mocker'
+            handler: (_, __) => PING_MSG
         });
     
         // Create hapi server catchall route

@@ -18,3 +18,111 @@ Currently, only REST API responses are supported.
 
 This is a NodeJS application, you can install it as dev dependency in your project or as independent project, there is also a [Docker Image](https://hub.docker.com/r/dvlprtech/api-mockr).
 
+## Installation
+
+Install it as dev dependency:
+
+```sh
+npm install --save-dev api-mockr
+```	
+
+Install it as docker image:
+
+```sh
+docker pull dvlprtech/api-mockr
+```
+
+For furhter details about the use with docker you can access to DockerHub [api-mockr image](https://hub.docker.com/r/dvlprtech/api-mockr) page.
+
+## How to use
+
+You can use the CLI tool `api-mockr` to start the application:
+
+```sh
+npx api-mockr
+```
+
+The following output will apear:
+
+```
+Server running at: http://0.0.0.0:3003
+```
+
+There are several options params that can be used to configure the server:
+
+* `--port`: The port to listen to. Default is `3003`.
+* `--host`: The host to listen to. Default is `0.0.0.0`.
+* `--config`: The path to the config file. It's a multivalue param.
+* `--apiPrefix`: The prefix to invoque the API services. Default is `/`.
+
+Example of use:
+    
+```sh
+$ npx api-mockr --port=13003 --host=localhost --apiPrefix=/api
+Server running at: http://localhost:13003/api
+```
+
+Without additional configuration, the default server will response with the following data to whatever request:
+
+```txt
+$ curl 'http://localhost:3003/api/whatever?foo=bar'
+{"success":true,"request":{"path":"/api/whatever","params":{"foo":"bar"}}}
+```
+
+There is an exception, the call to `/` will return a fixed text, that can be used to "ping" the server.
+```txt
+$ curl 'http://localhost:3003/'
+API Mockr
+```
+
+
+## Special params
+
+There are some special params that can be used with each request:
+
+* `_pretty`: If it's set to `true`, the response will be pretty printed.
+* `_delay`: The delay to wait before responding.
+* `_forceError`: If it's set to `true`, the response will be an error with a http status code of `500` by default.
+
+The error response can be customized with 2 header:
+
+* `x-mocker-force-error'`: HTTP status code to be returned, can be any value between `400` and `599`. Values out of range will be ignored.
+* `x-mocker-error-msg`: The error message to be returned, you can use variables in the message, like `"ERROR: ${random.emoji} ${random.phrase}"`.
+
+Example of error response:
+
+```txt
+$ curl 'http://localhost:3003/api/whatever?foo=bar&_forceError=true&_pretty=1'
+{
+  "success": false,
+  "error": "Error in request to path: /api/whatever",
+  "request": {
+    "body": null,
+    "params": {
+      "foo": "bar",
+      "_forceError": "true",
+      "_pretty": "1"
+    }
+  }
+}
+```
+
+Customizing the message and code:
+
+```txt
+$ curl -H "x-mocker-force-error: 418" -H 'x-mocker-error-msg: ERROR: ${random.emoji} ${random.phrase}' 'http://localhost:3003/api/whatever?foo=bar&_forceError=true&_pretty=1'
+{
+  "success": false,
+  "error": "ERROR: 🐭 You cant quantify the driver without transmitting the multi-byte SQL microchip!",
+  "request": {
+    "body": null,
+    "params": {
+      "foo": "bar",
+      "_forceError": "true",
+      "_pretty": "1"
+    }
+  }
+```
+
+The emoji and the error phrase will be different with each call.
+
