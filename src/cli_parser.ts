@@ -17,7 +17,7 @@ const optionDefinitions : OptionDefinition[] = [
     { name: 'logRequestData', alias: 'r', type: Boolean, defaultValue: false },
     { name: 'debug', alias: 'd', type: Boolean, defaultValue: false },
     { name: 'config', alias: 'c', multiple: true, type: String },
-    { name: 'apiPrefix', alias: 'a', type: String, defaultValue: '/api' },
+    { name: 'apiPrefix', alias: 'a', type: String, defaultValue: '' },
     { name: 'port', alias: 'p', type: Number, defaultValue: 3003 },
     { name: 'host', alias: 'h', type: String, defaultValue: '0.0.0.0' }
   ]

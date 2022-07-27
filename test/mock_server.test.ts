@@ -22,7 +22,7 @@ describe('Testing server management', () => {
                 error: "${error}"
             }
         }
-        mockServer = new MockServer({responseConfig});
+        mockServer = new MockServer({responseConfig, apiPrefix: '/api'});
         process.env.NODE_ENV = 'test';
     });
     afterEach(() => {
@@ -63,13 +63,21 @@ describe('Testing server management', () => {
             headers: {
                 'x-mocker-force-error': '1045',
                 'x-mocker-error-msg': 'Custom error msg',
-
             }
         });
         payload = JSON.parse(res.payload);
         expect(payload.success).to.be.false();
         expect(payload.error).to.be.equal('Custom error msg');
         expect(res.statusCode).to.be.equal(500);
+
+        res = await mockServer.server.inject({
+            method: 'get',
+            url: '/api/whatever?_forceError=404',
+            
+        });
+        payload = JSON.parse(res.payload);
+        expect(payload.success).to.be.false();
+        expect(res.statusCode).to.be.equal(404);
     });
 
     it('Server no api call error', async () => {
@@ -124,7 +132,11 @@ describe('Testing server management', () => {
         expect(localMockServer.apiPrefix).to.be.equal("/test");
         expect(localMockServer.host).to.be.equal("localhost");
         expect(localMockServer.port).to.be.equal(5555);
+
+        process.env.MOCKER_PREFIX = '';
         
+        expect(new MockServer().apiPrefix).to.be.equal("");
+
     });
 
     it('Log request data', async () => {

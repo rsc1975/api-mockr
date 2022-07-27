@@ -11,6 +11,10 @@ interface MockServerInputParams {
     apiPrefix?: string;
 }
 
+const PRETTY_PARAM = '_pretty';
+const FORCE_ERROR_PARAM = '_forceError';
+const FORCE_ERROR_HEADER = 'x-mocker-force-error';
+const FORCE_ERROR_MSG_HEADER = 'x-mocker-error-msg';
 
 export class MockServer {
     public server: Server;
@@ -21,8 +25,8 @@ export class MockServer {
     public responseConfig: MockerConfig;
 
     constructor({host, port, apiPrefix, logRequestData, responseConfig} : MockServerInputParams = {}) {
-        this.apiPrefix = apiPrefix || process.env.MOCKER_PREFIX || '/api';
-        if (!this.apiPrefix.startsWith("/")) {
+        this.apiPrefix = apiPrefix || process.env.MOCKER_PREFIX || '';
+        if (!this.apiPrefix.startsWith("/") && !!this.apiPrefix) {
             this.apiPrefix = "/" + this.apiPrefix;
           }
         this.host = host || process.env.MOCKER_BINDING || '0.0.0.0';
@@ -55,8 +59,8 @@ export class MockServer {
             method: '*',
             path: `${this.apiPrefix}/{p*}`,
             handler: (req: Request, h : ResponseToolkit) => {
-                const responseGenerator = new ResponseGenerator(req, this.responseConfig, this.apiPrefix);
-                return responseGenerator.generate();
+                const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
+                return responseGenerator.generate(req);
             }
         });
 
@@ -83,11 +87,11 @@ export class MockServer {
 
         srv.ext('onRequest', (req : Request, h : ResponseToolkit) => {
             const { headers } : any = req;
-            const errorCode = +headers['x-mocker-force-error'];
+            const errorCode = +headers[FORCE_ERROR_HEADER] || +req.query[FORCE_ERROR_PARAM];
             if (!!errorCode) {                
-                const errorMsg = headers['x-mocker-error-msg'];
-                const responseGenerator = new ResponseGenerator(req, this.responseConfig, this.apiPrefix);
-                const errorResponse = responseGenerator.generateError(errorMsg, errorCode);
+                const errorMsg = headers[FORCE_ERROR_MSG_HEADER];
+                const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
+                const errorResponse = responseGenerator.generateError(req, errorMsg, errorCode);
                 return h.response(errorResponse.payload).code(errorResponse.httpStatus).takeover();
             }
             return h.continue;
@@ -98,7 +102,7 @@ export class MockServer {
             if (response.output?.statusCode === 404) {
                 return h.response(`Missing route, try: ${this.apiPrefix}/<anything>`).code(404);
             }
-            if (req.query._pretty) {
+            if (req.query[PRETTY_PARAM]) {
                 response.spaces(2).takeover();
             }            
             return h.continue;

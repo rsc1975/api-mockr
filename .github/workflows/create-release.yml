@@ -8,39 +8,28 @@ on:
 jobs:
   test:
     uses: ./.github/workflows/qa-coverage.yml
-  build:
-    uses: ./.github/workflows/build.yml
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [test, build]
+    needs: test
     steps:
-      - name: Variables
-        run: |
-              echo "APP_VERSION=v${{needs.build.outputs.app_version}}" >> $GITHUB_ENV
-              echo "APP_NAME=${{needs.build.outputs.APP_NAME}}" >> $GITHUB_ENV
-      - name: Variables
-        run: |
-              echo "${{ github.ref_name }} != ${{ env.APP_VERSION }}"
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16       
+      - run: |
+              echo "APP_VERSION=$(npm run --silent version)" >> $GITHUB_ENV
       - name: Version Check
-        if: ${{ github.ref_name != env.APP_VERSION }}
+        if: ${{ github.ref_name != format('v{0}',env.APP_VERSION) }}
         uses: actions/github-script@v3
         with:
           script: |
-            core.setFailed('App version in tag mismatch real code version!!! (${{ env.APP_VERSION }} != ${{ github.ref_name }})')
-      - name: Checkout code
-        uses: actions/checkout@v3
+            core.setFailed('App version in tag mismatch real code version!!! (${{ format('v{0}', env.APP_VERSION) }} != ${{ github.ref_name }})')
+      - run: npm ci       
+      - run: npm run build --if-present
+      - run: cd dist && npm pack --pack-destination ../
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref_name }}
-          body: |
-            Changes in this Release
-            - First Change
-            - Second Change
-          draft: false
-          prerelease: false
+          files: api-mockr-${{ env.APP_VERSION }}.tgz
