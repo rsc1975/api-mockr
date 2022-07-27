@@ -2,6 +2,6 @@
 'use strict';
 
 const path = require("path");
-const mockr = require(path.join('..', 'dist', 'api-mockr.min'));
+const mockr = require(path.join('..', 'api-mockr.min'));
 
 mockr.run();
