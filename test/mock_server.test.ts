@@ -46,12 +46,13 @@ describe('Testing server management', () => {
 
     it('Server delay', async () => {
         const t0 = Date.now();
+        const delay = 100;
         const res = await mockServer.server.inject({
             method: 'get',
-            url: '/?_delay=100'
+            url: `/?_delay=${delay}`
         });
         const t1 = Date.now();
-        expect(t1 - t0).to.be.greaterThan(100);
+        expect(t1 - t0).to.be.greaterThan(delay - 1); // Could be equal
     });
 
     it('Server forced error', async () => {
