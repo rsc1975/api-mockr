@@ -21,9 +21,9 @@ jobs:
               echo "APP_NAME=${{needs.build.outputs.APP_NAME}}" >> $GITHUB_ENV
       - name: Variables check
         run: |
-              echo ${{ env.APP_VERSION }} "${{ format('v{0}', env.app_version) }} != ${{ github.ref_name }}"
+              echo "v${{ env.APP_VERSION }} ${{ format('v{0}', env.APP_VERSION) }} != ${{ github.ref_name }}"
       - name: Version Check
-        if: format('v{0}', ${{ env.APP_VERSION }}) != ${{ github.ref_name }}
+        if: "v${{ env.APP_VERSION }}" != ${{ github.ref_name }}
         uses: actions/github-script@v3
         with:
           script: |
