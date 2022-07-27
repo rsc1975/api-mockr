@@ -18,6 +18,7 @@ jobs:
       - run: |
               echo "APP_VERSION=${{needs.build.outputs.app_version}}" >> $GITHUB_ENV
               echo "APP_NAME=${{needs.build.outputs.APP_NAME}}" >> $GITHUB_ENV
+              echo "${{ format('{{v{0}}}', env.APP_VERSION) }} ${{ format('v{0}', env.APP_VERSION) }} != ${{ github.ref_name }}"
       - name: Version Check
         if: ${{ format('v{0}', env.APP_VERSION) }} != ${{ github.ref_name }}
         uses: actions/github-script@v3
