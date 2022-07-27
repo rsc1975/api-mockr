@@ -1,7 +1,8 @@
 name: Docker image
 on:
   release:
-    types: [published]
+    types: [released]
+    
 jobs:
   test:
     uses: ./.github/workflows/qa-coverage.yml
