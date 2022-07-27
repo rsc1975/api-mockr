@@ -23,11 +23,11 @@ jobs:
         run: |
               echo "${{ github.ref_name }} != ${{ env.APP_VERSION }}"
       - name: Version Check
-        if: ${{ github.ref_name }} != ${{ env.APP_VERSION }}
+        if: ${{ github.ref_name != env.APP_VERSION }}
         uses: actions/github-script@v3
         with:
           script: |
-            core.setFailed('App version in tag mismatch real code version!!! (v${{ env.APP_VERSION }} != ${{ github.ref_name }})')
+            core.setFailed('App version in tag mismatch real code version!!! (${{ env.APP_VERSION }} != ${{ github.ref_name }})')
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Create Release
