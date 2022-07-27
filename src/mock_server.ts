@@ -11,8 +11,15 @@ interface MockServerInputParams {
     apiPrefix?: string;
 }
 
+function sleep(ms: number) : Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
 export const PING_MSG = 'API Mockr\n';
 const PRETTY_PARAM = '_pretty';
+const DELAY_PARAM = '_delay';
 const FORCE_ERROR_PARAM = '_forceError';
 const FORCE_ERROR_HEADER = 'x-mocker-force-error';
 const FORCE_ERROR_MSG_HEADER = 'x-mocker-error-msg';
@@ -86,8 +93,12 @@ export class MockServer {
             return h.continue;
         });
 
-        srv.ext('onRequest', (req : Request, h : ResponseToolkit) => {
+        srv.ext('onRequest', async (req : Request, h : ResponseToolkit) => {
             const { headers } : any = req;
+            const delay = +req.query[DELAY_PARAM];
+            if (delay) {
+                await sleep(delay);
+            }
             const forceError = !!req.query[FORCE_ERROR_PARAM];
             const errorCode = +headers[FORCE_ERROR_HEADER];
             if (!!errorCode || forceError) {                

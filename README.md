@@ -20,19 +20,19 @@ This is a NodeJS application, you can install it as dev dependency in your proje
 
 ## Installation
 
-Install it as dev dependency:
+Installation as dev dependency:
 
 ```sh
 npm install --save-dev api-mockr
 ```	
 
-Install it as docker image:
+Installation as docker image:
 
 ```sh
 docker pull dvlprtech/api-mockr
 ```
 
-For furhter details about the use with docker you can access to DockerHub [api-mockr image](https://hub.docker.com/r/dvlprtech/api-mockr) page.
+For further details about the use with docker you can access to DockerHub [api-mockr image](https://hub.docker.com/r/dvlprtech/api-mockr) page.
 
 ## How to use
 
@@ -75,13 +75,12 @@ $ curl 'http://localhost:3003/'
 API Mockr
 ```
 
-
 ## Special params
 
 There are some special params that can be used with each request:
 
 * `_pretty`: If it's set to `true`, the response will be pretty printed.
-* `_delay`: The delay to wait before responding.
+* `_delay`: The delay in milliseconds to wait before responding.
 * `_forceError`: If it's set to `true`, the response will be an error with a http status code of `500` by default.
 
 The error response can be customized with 2 header:

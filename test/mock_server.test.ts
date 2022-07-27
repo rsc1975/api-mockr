@@ -44,6 +44,16 @@ describe('Testing server management', () => {
         expect(res.statusCode).to.be.equal(200);
     });
 
+    it('Server delay', async () => {
+        const t0 = Date.now();
+        const res = await mockServer.server.inject({
+            method: 'get',
+            url: '/?_delay=100'
+        });
+        const t1 = Date.now();
+        expect(t1 - t0).to.be.greaterThan(100);
+    });
+
     it('Server forced error', async () => {
         
         let res = await mockServer.server.inject({
