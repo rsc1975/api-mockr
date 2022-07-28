@@ -5,8 +5,8 @@ import { deepMerge, getConfig, loadConfigFile, MockerConfig } from './routes_con
 
 interface ToolOptions {
   apiPrefix: string;
-  logRequestData: boolean;
-  debug: boolean;
+  silent: boolean;
+  verbose: boolean;
   config: string[];
   responseConfig?: MockerConfig;
   port: number;
@@ -14,8 +14,8 @@ interface ToolOptions {
 }
 
 const optionDefinitions : OptionDefinition[] = [
-    { name: 'logRequestData', alias: 'r', type: Boolean, defaultValue: false },
-    { name: 'debug', alias: 'd', type: Boolean, defaultValue: false },
+    { name: 'silent', alias: 's', type: Boolean, defaultValue: false },
+    { name: 'verbose', alias: 'v', type: Boolean, defaultValue: false },
     { name: 'config', alias: 'c', multiple: true, type: String },
     { name: 'apiPrefix', alias: 'a', type: String, defaultValue: '' },
     { name: 'port', alias: 'p', type: Number, defaultValue: 3003 },
@@ -28,6 +28,7 @@ export const getParams = () : ToolOptions => {
   const opts = commandLineArgs(optionDefinitions, {
     partial: true
   }) as ToolOptions;
+
   const extraConfig : MockerConfig[] = [];
   for (let fPath of opts.config || []) {
     if (!existsSync(fPath)) {

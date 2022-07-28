@@ -151,8 +151,8 @@ describe('Testing server management', () => {
     });
 
     it('Log request data', async () => {
-        const logConsole = Sinon.stub(console, 'info');
-        const localMockServer : MockServer = new MockServer({apiPrefix:'/api', logRequestData:true});
+        const localMockServer : MockServer = new MockServer({apiPrefix:'/api', verbose:true});
+        const logServer = Sinon.stub(localMockServer.server, 'log');
         const res = await localMockServer.server.inject({
             method: 'POST',
             url: '/api/whatever?hola=caracola&foo=bar',
@@ -161,18 +161,18 @@ describe('Testing server management', () => {
             }
         });
         expect(res.statusCode).to.be.equal(200);
-        expect(logConsole.calledOnce).be.true();
+        expect(logServer.calledOnce).be.true();
         //console.log('LLAMADAS:', logConsole.calledOnce, logConsole.getCall(0).args);
         
-        Sinon.assert.match(logConsole.getCall(0).args[0], /POST.*api\/whatever.*hola.*caracola.*name.*Rob/);
+        Sinon.assert.match(logServer.getCall(0).args[0], /POST.*api\/whatever.*hola.*caracola.*name.*Rob/);
 
         const res2 = await localMockServer.server.inject({
             method: 'GET',
             url: '/api/different'
         });
         expect(res.statusCode).to.be.equal(200);
-        expect(logConsole.calledTwice).be.true();
-        Sinon.assert.match(logConsole.getCall(1).args[0], /GET.*api\/different/);
+        expect(logServer.calledTwice).be.true();
+        Sinon.assert.match(logServer.getCall(1).args[0], /GET.*api\/different/);
 
     });
     

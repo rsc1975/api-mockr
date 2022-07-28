@@ -1,21 +1,17 @@
-import { Request, ResponseToolkit, server as hapiServer, Server } from '@hapi/hapi';
+import { LogEvent, Request, ResponseToolkit, server as hapiServer, Server } from '@hapi/hapi';
 import { ResponseGenerator } from './response_generator';
 import { MockerConfig } from './routes_config';
 
 interface MockServerInputParams {
     port?: number;
     host?: string;
-    debug?: boolean;
-    logRequestData?: boolean;
+    verbose?: boolean;
+    silent?: boolean;
     responseConfig?: MockerConfig;   
     apiPrefix?: string;
 }
 
-function sleep(ms: number) : Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
-  }
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const PING_MSG = 'API Mockr\n';
 const PRETTY_PARAM = '_pretty';
@@ -29,17 +25,19 @@ export class MockServer {
     public host: string;
     public port: number;
     public apiPrefix: string;
-    public logRequestData?: boolean;
+    public verbose: boolean;
+    public silent: boolean;
     public responseConfig: MockerConfig;
 
-    constructor({host, port, apiPrefix, logRequestData, responseConfig} : MockServerInputParams = {}) {
+    constructor({host, port, apiPrefix, verbose, silent, responseConfig} : MockServerInputParams = {}) {
         this.apiPrefix = apiPrefix || process.env.MOCKER_PREFIX || '';
         if (!this.apiPrefix.startsWith("/") && !!this.apiPrefix) {
             this.apiPrefix = "/" + this.apiPrefix;
           }
         this.host = host || process.env.MOCKER_BINDING || '0.0.0.0';
         this.port = port || +(process.env.MOCKER_PORT || 3003);
-        this.logRequestData = !!logRequestData;
+        this.silent = !!silent;
+        this.verbose = !this.silent && !!verbose;
         this.responseConfig = responseConfig || {};
         this.server = this.create();
     }
@@ -74,20 +72,20 @@ export class MockServer {
 
         const logRequest = (req: Request) => {
             
-            let logReq = `${req.method.toUpperCase()} ${req.url.pathname}`;
+            let logReq = `[request] ${req.method.toUpperCase()} ${req.url.pathname}`;
             if (!!req.url.search) {
-                logReq += ` [Params: ${req.url.search.substring(1).replace('&', ' ')}]`;
+                logReq += ` [params: ${req.url.search.substring(1).replace('&', ' ')}]`;
             }
-            if (req.headers['content-type'] === 'application/json') {
-                
-                logReq += ` [Body: ${JSON.stringify(req.payload)}]`;
+            if (!!req.payload) {
+                const body = req.headers['content-type'] === 'application/json' ? JSON.stringify(req.payload) : Object.keys(req.payload);
+                logReq += ` [payload: ${body}]`;
             }
-            console.info(logReq);
-            this.server.log('info', logReq);
+            
+            this.server.log('verbose', logReq);
         }
 
         srv.ext('onPreHandler', (req : Request, h : ResponseToolkit) => {
-            if (this.logRequestData) {
+            if (this.verbose) {
                 logRequest(req);
             }
             return h.continue;
@@ -117,12 +115,30 @@ export class MockServer {
             }
             if (req.query[PRETTY_PARAM]) {
                 response.spaces(2).takeover();
-            }            
+            }
             return h.continue;
         });
+        srv.ext('onPostResponse', (req : Request, h : ResponseToolkit) => {
+            const { response } : any = req;
+            this.server.log('info', `[response] ${req.method.toUpperCase()} ${req.url.pathname} => (status: ${response.statusCode}, length: ${response.headers['content-length'] || 'unknown'}, content-type: ${response.contentType})`);
+            return h.continue;
+        });        
+
+        srv.events.on('log', (event: LogEvent, tags: { [key: string]: true }) => {
+            if (!this.silent) {
+                if (tags.info) {
+                    console.log(event.data);
+                }
+                if (this.verbose && tags.verbose) {
+                    console.log(event.data);
+                }
+            }
+        });
     
+        
         return srv;
     }
+
 
     async start() : Promise<void> {       
         await this.server.initialize();        
