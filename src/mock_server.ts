@@ -126,10 +126,8 @@ export class MockServer {
         });        
 
         srv.events.on('log', (event: LogEvent, tags: { [key: string]: true }) => {
-            console.log("ON LOG: srv.events.on('log'...");
             if (!this.silent) {
                 if (tags.info) {
-                    console.log("tags.info: ", event.data);
                     console.info(event.data);
                 }
                 if (this.verbose && tags.verbose) {
@@ -145,7 +143,7 @@ export class MockServer {
 
     async start() : Promise<void> {       
         await this.server.initialize();        
-        console.log(`Server running at: ${this.server.info.uri}${this.apiPrefix}`);
+        this.server.log('info', `Server running at: ${this.server.info.uri}${this.apiPrefix}`);
         return this.server.start();
     }
 

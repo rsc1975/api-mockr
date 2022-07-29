@@ -88,7 +88,7 @@ describe('Testing response generators', () => {
             },
             app: {}
           };
-        const server = new MockServer({apiPrefix: '/api'}).server;
+        const server = new MockServer({apiPrefix: '/api', silent: true}).server;
         const response = await server.inject(request);
 
         return response.request; 

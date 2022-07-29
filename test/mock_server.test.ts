@@ -121,7 +121,7 @@ describe('Testing server management', () => {
     });
 
     it('Start/stop server', async () => {
-        const localMockServer : MockServer = new MockServer({host:'localhost', port:33333, apiPrefix:'/testapi'});
+        const localMockServer : MockServer = new MockServer({host:'localhost', port:33333, apiPrefix:'/testapi', silent: true});
         expect(localMockServer.apiPrefix).to.be.equal("/testapi");
         expect(localMockServer.host).to.be.equal("localhost");
         expect(localMockServer.port).to.be.equal(33333);
@@ -139,7 +139,7 @@ describe('Testing server management', () => {
         process.env.MOCKER_BINDING = 'localhost';
         process.env.MOCKER_PORT = '5555';
 
-        const localMockServer : MockServer = new MockServer();
+        const localMockServer : MockServer = new MockServer({silent: true});
         expect(localMockServer.apiPrefix).to.be.equal("/test");
         expect(localMockServer.host).to.be.equal("localhost");
         expect(localMockServer.port).to.be.equal(5555);
@@ -189,7 +189,7 @@ describe('Testing server management', () => {
 
     
     it('Log request data NO verbose', async () => {
-        const localMockServer : MockServer = new MockServer({apiPrefix:'/api', verbose:false});
+        const localMockServer : MockServer = new MockServer({apiPrefix:'/api', silent: true});
         const logServer = Sinon.stub(localMockServer.server, 'log');
         const res = await localMockServer.server.inject({
             method: 'GET',
@@ -234,7 +234,6 @@ describe('Testing server management', () => {
         await localMockServer.server.events.emit({name: 'log', tags: {'verbose':true}}, {data:'test-verbose'});
         expect(logConsole.calledOnce).be.true();
         expect(logConsole.getCall(0).args[0]).to.be.equal('test-verbose');
-        
 
     });
 
