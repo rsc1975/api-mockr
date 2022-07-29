@@ -22,7 +22,7 @@ describe('Testing server management', () => {
                 error: "${error}"
             }
         }
-        mockServer = new MockServer({responseConfig, apiPrefix: '/api'});
+        mockServer = new MockServer({responseConfig, apiPrefix: '/api', silent: true});
         process.env.NODE_ENV = 'test';
     });
     afterEach(() => {
@@ -150,31 +150,94 @@ describe('Testing server management', () => {
 
     });
 
-    it('Log request data', async () => {
+    it('Log request data verbose', async () => {
         const localMockServer : MockServer = new MockServer({apiPrefix:'/api', verbose:true});
         const logServer = Sinon.stub(localMockServer.server, 'log');
         const res = await localMockServer.server.inject({
             method: 'POST',
             url: '/api/whatever?hola=caracola&foo=bar',
+            payload: "{ name: 'Rob' }",
+            headers: {
+                'content-type': 'text/plain',
+            }
+        });
+        expect(res.statusCode).to.be.equal(200);
+        expect(logServer.calledTwice).be.true();
+        
+        Sinon.assert.match(logServer.getCall(0).args[1], /DEBUG.*POST.*api\/whatever.*hola.*caracola.*name.*Rob/);
+        Sinon.assert.match(logServer.getCall(1).args[1], /INFO.*POST.*api\/whatever.*200.*json/);
+
+        const res2 = await localMockServer.server.inject({
+            method: 'POST',
+            url: '/api/whatever',
+            payload: { name: 'Rob' },
+        });
+        expect(res.statusCode).to.be.equal(200);
+        expect(logServer.callCount).be.equal(4);
+        
+        Sinon.assert.match(logServer.getCall(0).args[1], /DEBUG.*POST.*api\/whatever.*name.*Rob/);
+        Sinon.assert.match(logServer.getCall(1).args[1], /INFO.*POST.*api\/whatever.*200.*json/);
+
+
+        const res3 = await localMockServer.server.inject({
+            method: 'GET',
+            url: '/api/whatever'
+        });
+        expect(res3.statusCode).to.be.equal(200);
+        expect(logServer.callCount).be.equal(6);
+    });
+
+    
+    it('Log request data NO verbose', async () => {
+        const localMockServer : MockServer = new MockServer({apiPrefix:'/api', verbose:false});
+        const logServer = Sinon.stub(localMockServer.server, 'log');
+        const res = await localMockServer.server.inject({
+            method: 'GET',
+            url: '/api/getting_things?hola=caracola&foo=bar',
             payload: {
                 name: 'Rob',
             }
         });
         expect(res.statusCode).to.be.equal(200);
         expect(logServer.calledOnce).be.true();
-        //console.log('LLAMADAS:', logConsole.calledOnce, logConsole.getCall(0).args);
         
-        Sinon.assert.match(logServer.getCall(0).args[0], /POST.*api\/whatever.*hola.*caracola.*name.*Rob/);
-
-        const res2 = await localMockServer.server.inject({
-            method: 'GET',
-            url: '/api/different'
-        });
-        expect(res.statusCode).to.be.equal(200);
-        expect(logServer.calledTwice).be.true();
-        Sinon.assert.match(logServer.getCall(1).args[0], /GET.*api\/different/);
+        Sinon.assert.match(logServer.getCall(0).args[1], /INFO.*GET.*api\/getting_things.*200.*json/);
 
     });
-    
-    
+
+    it('Log event with silent/no-silent', async () => {
+        const localMockServer : MockServer = new MockServer({apiPrefix:'/api', silent:true});
+        const logConsole = Sinon.stub(console, 'info');
+
+        await localMockServer.server.events.emit({name: 'log', tags: {'info':true}}, {data:'test-silent'});
+        expect(logConsole.called).be.false();
+        localMockServer.silent = false;
+        await localMockServer.server.events.emit({name: 'log', tags: {'info':true}}, {data:'test-NO-silent'});
+        expect(logConsole.calledOnce).be.true();
+        expect(logConsole.getCall(0).args[0]).to.be.equal('test-NO-silent');
+
+    });
+
+
+    it('Log event with verbose', async () => {
+        const localMockServer : MockServer = new MockServer({apiPrefix:'/api', verbose:true, silent: true});
+        const logConsole = Sinon.stub(console, 'info');
+        await localMockServer.server.events.emit({name: 'log', tags: {'verbose':true}}, {data:'test-verbose'});
+        expect(localMockServer.verbose).be.false();
+        expect(logConsole.called).be.false();
+        localMockServer.verbose = true;
+        localMockServer.silent = false;
+
+        await localMockServer.server.events.emit({name: 'log', tags: {'verbose':false}}, {data:'test-verbose'});
+        expect(logConsole.called).be.false();
+        
+        await localMockServer.server.events.emit({name: 'log', tags: {'verbose':true}}, {data:'test-verbose'});
+        expect(logConsole.calledOnce).be.true();
+        expect(logConsole.getCall(0).args[0]).to.be.equal('test-verbose');
+        
+
+    });
+
+
+
 });
