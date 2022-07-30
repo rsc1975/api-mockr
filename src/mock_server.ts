@@ -143,12 +143,13 @@ export class MockServer {
 
     async start() : Promise<void> {       
         await this.server.initialize();        
-        this.server.log('info', `Server running at: ${this.server.info.uri}${this.apiPrefix}`);
+        this.server.log('info', `[🟢 api-mockr] Server running at: ${this.server.info.uri}${this.apiPrefix}`);
         return this.server.start();
     }
 
     async stop() {
         await this.server.stop();
+        this.server.log('info', `[🟥 api-mockr] Server stopped`);
     }
 
     async dispose() {
