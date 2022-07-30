@@ -52,6 +52,8 @@ There are several options params that can be used to configure the server:
 
 * `--port`: The port to listen to. Default is `3003`.
 * `--host`: The host to listen to. Default is `0.0.0.0`.
+* `--silent`: If present, the server will not output any message. By default, the server will print every request with the basic info about the response.
+* `--verbose`: If present, the server will print every request with its params and payload.
 * `--config`: The path to the config file. It's a multivalue param.
 * `--apiPrefix`: The prefix to invoque the API services. Default is `/`.
 
@@ -59,7 +61,7 @@ Example of use:
     
 ```sh
 $ npx api-mockr --port=13003 --host=localhost --apiPrefix=/api
-Server running at: http://localhost:13003/api
+[🟢 api-mockr] Server running at: http://localhost:13003/api
 ```
 
 Without additional configuration, the default server will response with the following data to whatever request:
@@ -80,7 +82,7 @@ API Mockr
 There are some special params that can be used with each request:
 
 * `_pretty`: If it's set to `true`, the response will be pretty printed.
-* `_delay`: The delay in milliseconds to wait before responding.
+* `_delay`: The delay in milliseconds to wait before responding. By default 0.
 * `_forceError`: If it's set to `true`, the response will be an error with a http status code of `500` by default.
 
 The error response can be customized with 2 header:
