@@ -42,7 +42,7 @@ The request params return data from request object.
 
 * `request.path`: Request path. Value example: `/api/users/1`
 * `request.params`: A map with all query params (Optionaly we can pass a paramName to return the specific value). I.e: `{ "foo": "bar" }` for `request.params` or `"bar"` for `request.params.foo`.
-* `request.body`: Request payload. (Optionally we can pass a field name to return the specific value). I.e: `{ "name": "John" }` for `request.body` or `"John"` for `request.body.name`.
+* `request.payload`: Request body or payload. (Optionally we can pass a field name to return the specific value). I.e: `{ "name": "John" }` for `request.body` or `"John"` for `request.body.name`.
 * `request.headers`: Request headers. (Optionally we can pass a header name to return the specific value). I.e: `{ "content-type": "application/json" }` for `request.headers` or `"application/json"` for `request.headers["content-type"]`.
 
 ### server

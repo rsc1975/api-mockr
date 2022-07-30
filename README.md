@@ -172,6 +172,6 @@ Some of the variables accept parameters, the params should be added after a dot 
 
 * `request.params.foo`: In requests like `/api/whatever?foo=bar` It will return `bar`.
 * `random.personFirstName.male`: This params accepts `male` or `female` as possible input values
-* `random.choose.monday.sunday.tuesday`: This params accepts a varable number of params and It will return one of them randomly.
+* `random.choose.monday.sunday.tuesday`: This params accepts a variable number of params and It will return one of them randomly.
 
 For further informaton about the supported variables, please refer to the [VARS.md](./VARS.md) file.

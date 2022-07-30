@@ -70,21 +70,25 @@ describe('Testing params values generator', () => {
     });
 
 
-    it('checks ParamValues for request.body', async () => {
+    it('checks ParamValues for request.payload', async () => {
         const req = await createRequest();
-        const value = ParamValues.get('request.body', req) as object;
+        const value = ParamValues.get('request.payload', req) as object;
         
         expect(value).to.be.object();
         expect(value).to.be.equal(req.payload as object);
         expect(Object.keys(value)).to.contains('email').to.contains('firstname');
     });
 
-    it('checks ParamValues for request.body.email', async () => {
+    it('checks ParamValues for request.payload.email', async () => {
         const req = await createRequest();
-        const value = ParamValues.get('request.body.email', req);
+        const value = ParamValues.get('request.payload.email', req);
 
         expect(value).to.be.string();
         expect(value).to.be.equal((req.payload as any).email).to.be.equal('r@r.es');
+
+        
+        const value2 = ParamValues.get('request.payload.email', {payload: null} as any);
+        expect(value2).to.be.undefined();
     });
 
     it('checks ParamValues for request.headers', async () => {

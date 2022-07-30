@@ -7,7 +7,7 @@ export class ParamValues {
     request: {
       path: (req: Request) => req.url.pathname,
       params: (req: Request, paramName?: string) => !!paramName ? req.query[paramName] : req.query,
-      body: (req: Request, paramName?: string) => !!paramName ? (req.payload as any)[paramName] : req.payload,
+      payload: (req: Request, paramName?: string) => !!paramName ? (<any>req.payload || {})[paramName] : req.payload,
       headers: (req: Request, headerName?: string) => !!headerName ? req.headers[headerName.toLowerCase()] : req.headers,
     },
     random: {

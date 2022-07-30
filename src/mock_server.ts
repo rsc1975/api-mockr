@@ -98,6 +98,17 @@ export class MockServer {
             if (delay) {
                 await sleep(delay);
             }
+            return h.continue;
+        });
+
+        srv.ext('onPreResponse', (req : Request, h : ResponseToolkit) => {
+            const { response, headers } : any = req;
+            if (response.output?.statusCode === 404) {
+                return h.response(`Missing route, try: ${this.apiPrefix}/<anything>`).code(404).takeover();
+            }
+            if (req.query[PRETTY_PARAM]) {
+                response.spaces(2).takeover();
+            }
             const forceError = !!req.query[FORCE_ERROR_PARAM];
             const errorCode = +headers[FORCE_ERROR_HEADER];
             if (!!errorCode || forceError) {                
@@ -105,17 +116,6 @@ export class MockServer {
                 const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
                 const errorResponse = responseGenerator.generateError(req, errorMsg, errorCode);
                 return h.response(errorResponse.payload).code(errorResponse.httpStatus).takeover();
-            }
-            return h.continue;
-        });
-
-        srv.ext('onPreResponse', (req : Request, h : ResponseToolkit) => {
-            const { response } : any = req;
-            if (response.output?.statusCode === 404) {
-                return h.response(`Missing route, try: ${this.apiPrefix}/<anything>`).code(404);
-            }
-            if (req.query[PRETTY_PARAM]) {
-                response.spaces(2).takeover();
             }
             return h.continue;
         });
