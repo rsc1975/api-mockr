@@ -8,11 +8,15 @@ export const run = async () => {
 
     const mockServer = new MockServer({...params});
     
-    const exitApp = (err: any) => {
+    const exitApp = async (err: any) => {
         !!err && console.error(err);
-        process.exit(1);
+        await mockServer.stop();
+        process.exit(err ? 1 : 0);
+        
     }
     process.on('unhandledRejection', exitApp);
+    process.on('SIGINT', exitApp);
+    
     await mockServer.start();
 };
 
