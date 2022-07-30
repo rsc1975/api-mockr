@@ -55,7 +55,7 @@ There are several options params that can be used to configure the server:
 * `--silent`: If present, the server will not output any message. By default, the server will print every request with the basic info about the response.
 * `--verbose`: If present, the server will print every request with its params and payload.
 * `--config`: The path to the config file. It's a multivalue param.
-* `--apiPrefix`: The prefix to invoque the API services. Default is `/`.
+* `--apiPrefix`: The prefix to invoque the API services. Default is `/`. If set all mocked routes should be invoked with this prefix. I.e. The configured route `/v1/users` should be invoked as `/api/v1/users` if we use `--apiPrefix=/api`.
 
 Example of use:
     
