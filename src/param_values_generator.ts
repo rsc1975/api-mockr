@@ -1,7 +1,6 @@
 import { Request } from "@hapi/hapi";
 import { randAddress, randBrand, randCompanyName, randCountry, randCountryCode, randEmail, randEmoji, randFilePath, randFirstName, randFullName, randFutureDate, randIp, randJobArea, randJobTitle, randLastName, randPastDate, randPhoneNumber, randPhrase, randPost, randSports, randUrl, randUser, randUserName, randUuid, randZipCode } from '@ngneat/falso';
 
-
 export class ParamValues {
   static readonly generators: any = {
     request: {

@@ -11,9 +11,9 @@ ADD dist ./
 RUN echo '\
 #!/usr/bin/env bash\n \
 echo Launching api-mockr...\n \
-node ./api-mockr.min.js $MOCKER_PARAMS\n ' > entrypoint.sh
+node ./api-mockr.min.js $MOCKR_PARAMS\n ' > entrypoint.sh
 RUN chmod +x entrypoint.sh 
 
-ENV MOCKER_PARAMS=""
+ENV MOCKR_PARAMS=""
 
 CMD [ "./entrypoint.sh" ]

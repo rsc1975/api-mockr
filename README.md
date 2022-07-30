@@ -10,7 +10,7 @@
 
 # api-mockr
 
-Just another API mocker that can be configured to response random and specific data. It can help testing integrations with third parties.
+Just another API mocker that can be configured to response random and specific data. It can help testing integrations with third parties. It's specially useful to create integration tests where we need to interact with an external service, so we can customize the response for different services exactly as we expect the external service responses. 
 
 Currently, only REST API responses are supported.
 
