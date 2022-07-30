@@ -158,4 +158,20 @@ There are 3 main sections in the config file:
 
 * `defaultResponse`: The default response to be returned when there is no match for the request path and the configured routes
 * `errorResponse`: The error response payload to be returned when an error occurs.
-* `routes`: The routes to be mocked grouped by HTTP method (get, post, put, ...). A wildcard can be used to match any method and/or any path.
+* `routes`: The routes to be mocked grouped by HTTP method (get, post, put, ...). A wildcard (`*`) can be used to match any method and/or any path.
+
+## Variables in configuration
+
+We can use variables in the configuration files to provide dynamic values with every response. There are several variables types:
+
+* `random`: Random values for all sort of data. i.e. `random.personFullName`, `random.integer`, `random.department`, ...
+* `request`: Values from the request. i.e. `request.path`, `request.params`, `request.payload`
+* `server`: Values from the server. i.e. `server.timestamp`, `server.isoDate`, ...
+
+Some of the variables accept parameters, the params should be added after a dot (`variable.paramValue`) for example:
+
+* `request.params.foo`: In requests like `/api/whatever?foo=bar` It will return `bar`.
+* `random.personFirstName.male`: This params accepts `male` or `female` as possible input values
+* `random.choose.monday.sunday.tuesday`: This params accepts a varable number of params and It will return one of them randomly.
+
+For further informaton about the supported variables, please refer to the [VARS.md](./VARS.md) file.
