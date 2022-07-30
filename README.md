@@ -174,4 +174,4 @@ Some of the variables accept parameters, the params should be added after a dot 
 * `random.personFirstName.male`: This params accepts `male` or `female` as possible input values
 * `random.choose.monday.sunday.tuesday`: This params accepts a variable number of params and It will return one of them randomly.
 
-For further informaton about the supported variables, please refer to the [VARS.md](./VARS.md) file.
+For further informaton about the supported variables, please refer to the [VARS.md](https://github.com/rsc1975/api-mockr/blob/main/VARS.md) file.
