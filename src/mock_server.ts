@@ -40,6 +40,9 @@ export class MockServer {
         this.verbose = !this.silent && !!verbose;
         this.responseConfig = responseConfig || {};
         this.server = this.create();
+        if (this.verbose) {
+            this.printConfig(this.responseConfig);
+        }
     }
 
     private create() : Server {
@@ -72,7 +75,7 @@ export class MockServer {
 
         const logRequest = (req: Request) => {
             
-            let logReq = `[DEBUG] [📃 ➡️] ${req.method.toUpperCase()} ${req.url.pathname}`;
+            let logReq = `[DEBUG] [➡️] ${req.method.toUpperCase()} ${req.url.pathname}`;
             if (!!req.url.search) {
                 logReq += ` [params: ${req.url.search.substring(1).replace('&', ' ')}]`;
             }
@@ -121,7 +124,7 @@ export class MockServer {
         });
         srv.ext('onPostResponse', (req : Request, h : ResponseToolkit) => {
             const { response } : any = req;
-            this.server.log('info', `[INFO] [⬅️ ${response.statusCode >= 400 ? '⭕' : '✅'}] ${req.method.toUpperCase()} ${req.url.pathname} => (status: ${response.statusCode}, length: ${response.headers['content-length'] }, content-type: ${response.contentType})`);
+            this.server.log('info', `[INFO] [➡️] ${req.method.toUpperCase()} ${req.url.pathname} [↩️ ${response.statusCode >= 400 ? '⭕' : '✅'}] (status: ${response.statusCode}, length: ${response.headers['content-length'] }, content-type: ${response.contentType})`);
             return h.continue;
         });        
 
@@ -155,7 +158,10 @@ export class MockServer {
     async dispose() {
         await this.stop();
     }
+
+    printConfig(config: MockerConfig) {
+        this.server.log('verbose', "[INFO] API Mockr is using the following configuration:");
+        this.server.log('verbose', JSON.stringify(config, null, 2)+"\n");        
+    }
+    
 }
-
-
-

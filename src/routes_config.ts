@@ -137,7 +137,6 @@ export function assertConfigIsValid(conf: any) : void {
         }  
     }
   }
-  
 
 /**
  * Returns the current config for the server
@@ -158,5 +157,6 @@ export function getConfig(...otherConfigs: MockerConfig[]) : MockerConfig {
     return defaultConfigCopy;
     
 }
+
 
 
