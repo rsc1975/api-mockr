@@ -14,8 +14,7 @@ errorResponse:
     params: ${request.params}
 routes:
   get: 
-    "*":
+    "say-whatever":
       success: true 
-      request: 
-        path: ${request.path}         
-        params: ${request.params}
+      author: ${random.personFirstName}
+      phrase: ${random.phrase}

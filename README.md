@@ -53,7 +53,7 @@ There are several options params that can be used to configure the server:
 * `--port`: The port to listen to. Default is `3003`.
 * `--host`: The host to listen to. Default is `0.0.0.0`.
 * `--silent`: If present, the server will not output any message. By default, the server will print every request with the basic info about the response.
-* `--verbose`: If present, the server will print every request with its params and payload.
+* `--verbose`: If present, the server will print every request with its params and payload and the applied server configuration when the server is created.
 * `--config`: The path to the config file. It's a multivalue param.
 * `--apiPrefix`: The prefix to invoque the API services. Default is `/`. If set all mocked routes should be invoked with this prefix. I.e. The configured route `/v1/users` should be invoked as `/api/v1/users` if we use `--apiPrefix=/api`.
 
@@ -134,6 +134,7 @@ The config files can be read in YAML and JSON formats, the default config file i
 ```yaml
 defaultResponse:
   success: true
+  timestamp: ${server.isoDatetime}
   request:
     path: ${request.path} 
     body: ${request.payload}
@@ -146,12 +147,11 @@ errorResponse:
     body: ${request.payload}
     params: ${request.params}
 routes:
-  "*": # HTTP Method
-    "*": # Path
+  get: 
+    "say-whatever":
       success: true 
-      request: 
-        path: ${request.path}         
-        params: ${request.params}
+      author: ${random.personFirstName}
+      phrase: ${random.phrase}
 ```
 
 There are 3 main sections in the config file:
@@ -167,6 +167,7 @@ We can use variables in the configuration files to provide dynamic values with e
 * `random`: Random values for all sort of data. i.e. `random.personFullName`, `random.integer`, `random.department`, ...
 * `request`: Values from the request. i.e. `request.path`, `request.params`, `request.payload`
 * `server`: Values from the server. i.e. `server.timestamp`, `server.isoDate`, ...
+* Path variables: Variables created in the config file to refer a path section. i.e. A configured route like `/api/users/${username}` will create a variable `username` with value "bob23" for a request path like `/api/users/bob23`, this variable can be used in the route response (`... "author": "${username}", ...`).
 
 Some of the variables accept parameters, the params should be added after a dot (`variable.paramValue`) for example:
 
@@ -175,3 +176,6 @@ Some of the variables accept parameters, the params should be added after a dot 
 * `random.choose.monday.sunday.tuesday`: This params accepts a variable number of params and It will return one of them randomly.
 
 For further informaton about the supported variables, please refer to the [VARS.md](https://github.com/rsc1975/api-mockr/blob/main/VARS.md) file.
+
+There are several examples of config files in [examples directory](./examples).
+

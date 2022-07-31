@@ -102,7 +102,6 @@ export const loadConfigFile = (filePath: string): MockerConfig => {
 
 
 export const defaultResponseConfig: MockerConfig = loadConfigFile(path.join(__dirname, 'config', 'response.yml'));
-console.log('defaultResponseConfig:', defaultResponseConfig);
 
 /**
  * Checks is config object is valid
@@ -132,8 +131,9 @@ export function assertConfigIsValid(conf: any) : void {
       }
     }
     if (configsToMerge.length > 1) {
+        const reversedExtraConfig = configsToMerge.reverse();
         for (let key of notMergeableFields) {
-            deletePreviousValues(key, configsToMerge.reverse());
+            deletePreviousValues(key, reversedExtraConfig);
         }  
     }
   }
