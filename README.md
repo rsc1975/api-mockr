@@ -44,8 +44,8 @@ npx api-mockr
 
 The following output will apear:
 
-```
-Server running at: http://0.0.0.0:3003
+```sh
+[🟢 api-mockr] Server running at: http://0.0.0.0:3003
 ```
 
 There are several options params that can be used to configure the server:
