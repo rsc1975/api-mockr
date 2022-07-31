@@ -84,6 +84,8 @@ There are some special params that can be used with each request:
 * `_pretty`: If it's set to `true`, the response will be pretty printed.
 * `_delay`: The delay in milliseconds to wait before responding. By default 0.
 * `_forceError`: If it's set to `true`, the response will be an error with a http status code of `500` by default.
+* `_clonePayload`: If it's set to `true`, the response payload will be a clone of the request payload but appling variable substitution if they are used in request payload.
+
 
 The error response can be customized with 2 header:
 

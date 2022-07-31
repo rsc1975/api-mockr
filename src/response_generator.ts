@@ -155,6 +155,9 @@ export class ResponseGenerator {
   }
 
   private findMatchPath(request: Request): SingleResponseConfig {
+    if (request.query._clonePayload) {
+      return request.payload as SingleResponseConfig;
+    }
     let methodRouteConfig: HttpMethodRoutesConfig | undefined;
     const method = request.method.toLowerCase() as HttpMethod;
     if (!!this.config.routes) {
