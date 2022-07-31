@@ -24,8 +24,8 @@ describe('Testing routes config', () => {
         expect(conf['defaultResponse']!['success']).to.be.true;
         expect(conf['errorResponse']!['success']).to.be.false;
         expect(conf['routes']!['get']).to.be.an.object();
-        expect(conf['routes']!['get']!['*']).to.be.an.object();
-        expect(conf['routes']!['get']!['*']['success']).to.be.true;
+        expect(conf['routes']!['get']!['say-whatever']).to.be.an.object();
+        expect(conf['routes']!['get']!['say-whatever']['success']).to.be.true;
     }
 
     it('checks default config', () => {
