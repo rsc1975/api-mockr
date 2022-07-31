@@ -1,0 +1,44 @@
+routes:
+  get: 
+    "/user/${username}":
+      username: ${username}
+      fullname: ${random.personFullName}
+      email: ${random.email}
+      department: ${random.department}
+      birthdate: ${random.pastDate.50}
+      roles:
+        - $length$: ${random.integer.4}
+          role: ${random.jobTitle}
+          fromDate: ${random.pastDate}
+    "/user":
+      - $length$: 5
+        username: ${random.username}
+        fullname: ${random.personFullName}
+        email: ${random.email}
+        department: ${random.department}
+  post:
+    "/user":
+      username: ${request.payload.username}
+      fullname: ${request.payload.fullname}
+      email: ${request.payload.email}
+      department: ${random.department}
+      birthdate: ${request.payload.birthdate}
+      roles:
+        - $length$: 1
+          role: ${random.jobTitle}
+          fromDate: ${server.isoDate}
+  put:
+    "/user/${username}":
+      username: ${username}
+      fullname: ${request.payload.fullname}
+      email: ${request.payload.email}
+      department: ${random.department}
+      birthdate: ${request.payload.birthdate}
+      roles:
+        - $length$: ${random.integer.5}
+          role: ${random.jobTitle}
+          fromDate: ${random.pastDate.10}
+  delete:
+    "/user/${username}":
+      sucess: true
+

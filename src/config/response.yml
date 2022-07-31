@@ -1,5 +1,6 @@
 defaultResponse:
   success: true
+  timestamp: ${server.isoDatetime}
   request:
     path: ${request.path} 
     body: ${request.payload}
@@ -12,7 +13,7 @@ errorResponse:
     body: ${request.payload}
     params: ${request.params}
 routes:
-  "*": 
+  get: 
     "*":
       success: true 
       request: 

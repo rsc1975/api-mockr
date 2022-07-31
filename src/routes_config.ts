@@ -102,7 +102,7 @@ export const loadConfigFile = (filePath: string): MockerConfig => {
 
 
 export const defaultResponseConfig: MockerConfig = loadConfigFile(path.join(__dirname, 'config', 'response.yml'));
-
+console.log('defaultResponseConfig:', defaultResponseConfig);
 
 /**
  * Checks is config object is valid
@@ -117,16 +117,46 @@ export function assertConfigIsValid(conf: any) : void {
 }
 
 /**
+ * Removes the config values for the first level element that shouldn't be merged ['defaultResponse', 'errorResponse']
+ * Keeping only the last one.
+ * @param extraConfig 
+ */
+ function prepareConfigMerge(configsToMerge: MockerConfig[]) {
+    const notMergeableFields = ['defaultResponse', 'errorResponse'];
+    function deletePreviousValues(key: string, reversedExtraConfig: MockerConfig[]) {
+      const lastIndex = reversedExtraConfig.findIndex((c:any) => !!c[key]);
+      if (lastIndex > -1) {
+        for (let i = lastIndex+1; i < reversedExtraConfig.length; i++) {
+            delete (<any>reversedExtraConfig[i])[key];
+          }      
+      }
+    }
+    if (configsToMerge.length > 1) {
+        for (let key of notMergeableFields) {
+            deletePreviousValues(key, configsToMerge.reverse());
+        }  
+    }
+  }
+  
+
+/**
  * Returns the current config for the server
  * 
  * @param otherConfig Additional config object to merge with the default config
  * @returns The merged config object
  */
-export function getConfig(otherConfig?: MockerConfig) : MockerConfig {
-    if (otherConfig) {
-        assertConfigIsValid(otherConfig);
+export function getConfig(...otherConfigs: MockerConfig[]) : MockerConfig {
+    const defaultConfigCopy = Merger.deepMerge({}, defaultResponseConfig) as MockerConfig;;
+    if (otherConfigs.length > 0) {
+        prepareConfigMerge(otherConfigs);
+        const newConfig = Merger.deepMerge(...otherConfigs) as MockerConfig;
+        assertConfigIsValid(newConfig);
+        const configsToMerge = [defaultConfigCopy, newConfig];
+        prepareConfigMerge(configsToMerge);
+        return Merger.deepMerge(...configsToMerge) as MockerConfig;
     }
-    return Merger.deepMerge({}, defaultResponseConfig, otherConfig || {}) as MockerConfig;
+    return defaultConfigCopy;
+    
 }
 
 

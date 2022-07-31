@@ -1,0 +1,9 @@
+defaultResponse:
+  success: true
+  request-datetime: ${server.isoDatetime}
+  request-path: ${request.path} 
+  params: ${request.params}
+routes:
+  get: 
+    "/whatever":
+      success: true

@@ -38,7 +38,10 @@ export const getParams = () : ToolOptions => {
       extraConfig.push(loadConfigFile(fPath));
     }
   }
-  opts.responseConfig = getConfig(deepMerge(...extraConfig));
+  
+  opts.responseConfig = getConfig(...extraConfig);
   
   return opts;  
 }
+
+

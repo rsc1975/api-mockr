@@ -1,0 +1,8 @@
+errorResponse:
+  $httpStatus$: 418
+  errorCode: ${random.integer.100}
+  errorMessage: "${error}"
+  request:
+    payload: ${request.payload}
+    path: ${request.path}
+    params: ${request.params}
