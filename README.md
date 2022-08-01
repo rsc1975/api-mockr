@@ -45,7 +45,7 @@ npx api-mockr
 The following output will apear:
 
 ```sh
-[🟢 api-mockr] Server running at: http://0.0.0.0:3003
+[🟢 api-mockr v0.0.0] Server running at: http://0.0.0.0:3003
 ```
 
 There are several options params that can be used to configure the server:
@@ -61,7 +61,7 @@ Example of use:
     
 ```sh
 $ npx api-mockr --port=13003 --host=localhost --apiPrefix=/api
-[🟢 api-mockr] Server running at: http://localhost:13003/api
+[🟢 api-mockr v0.0.0] Server running at: http://localhost:13003/api
 ```
 
 Without additional configuration, the default server will response with the following data to whatever request:
@@ -74,7 +74,7 @@ $ curl 'http://localhost:3003/api/whatever?foo=bar'
 There is an exception, the call to `/` will return a fixed text, that can be used to "ping" the server.
 ```txt
 $ curl 'http://localhost:3003/'
-API Mockr
+API Mockr (v0.0.0)
 ```
 
 ## Special params
