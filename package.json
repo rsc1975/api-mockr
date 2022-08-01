@@ -1,6 +1,6 @@
 {
   "name": "api-mockr",
-  "version": "0.9.13",
+  "version": "0.9.14",
   "description": "Just another API mocker that can be configured to response random and specific data",
   "main": "dist/api-mockr.min.js",
   "scripts": {

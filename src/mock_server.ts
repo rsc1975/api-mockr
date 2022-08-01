@@ -3,6 +3,7 @@ import { ResponseGenerator } from './response_generator';
 import { MockerConfig } from './routes_config';
 
 interface MockServerInputParams {
+    version?: string;
     port?: number;
     host?: string;
     verbose?: boolean;
@@ -13,7 +14,7 @@ interface MockServerInputParams {
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const PING_MSG = 'API Mockr\n';
+export const PING_MSG = 'API Mockr';
 const PRETTY_PARAM = '_pretty';
 const DELAY_PARAM = '_delay';
 const FORCE_ERROR_PARAM = '_forceError';
@@ -22,6 +23,7 @@ const FORCE_ERROR_MSG_HEADER = 'x-mocker-error-msg';
 
 export class MockServer {
     public server: Server;
+    public version: string;
     public host: string;
     public port: number;
     public apiPrefix: string;
@@ -29,11 +31,12 @@ export class MockServer {
     public silent: boolean;
     public responseConfig: MockerConfig;
 
-    constructor({host, port, apiPrefix, verbose, silent, responseConfig} : MockServerInputParams = {}) {
+    constructor({host, port, apiPrefix, verbose, silent, responseConfig, version} : MockServerInputParams = {}) {
         this.apiPrefix = apiPrefix || process.env.MOCKER_PREFIX || '';
         if (!this.apiPrefix.startsWith("/") && !!this.apiPrefix) {
             this.apiPrefix = "/" + this.apiPrefix;
           }
+        this.version = version || 'unknown';
         this.host = host || process.env.MOCKER_BINDING || '0.0.0.0';
         this.port = port || +(process.env.MOCKER_PORT || 3003);
         this.silent = !!silent;
@@ -60,7 +63,7 @@ export class MockServer {
         srv.route({
             method: 'GET',
             path: '/',
-            handler: (_, __) => PING_MSG
+            handler: (_, __) => `${PING_MSG} (v${this.version})`
         });
     
         // Create hapi server catchall route
@@ -146,7 +149,7 @@ export class MockServer {
 
     async start() : Promise<void> {       
         await this.server.initialize();        
-        this.server.log('info', `[🟢 api-mockr] Server running at: ${this.server.info.uri}${this.apiPrefix}`);
+        this.server.log('info', `[🟢 api-mockr v${this.version}] Server running at: ${this.server.info.uri}${this.apiPrefix}`);
         return this.server.start();
     }
 

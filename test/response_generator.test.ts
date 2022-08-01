@@ -275,4 +275,16 @@ describe('Testing response generators', () => {
         expect(response.payload.success).to.be.false();
 
     });
+
+    it('checks _clonePayload param', async () => {
+        const req : unknown = {payload: {a: 1, b: 2}, query: {_clonePayload: true}};
+        const respGenerator : ResponseGenerator = new ResponseGenerator({}, '/api');
+        let response : any = respGenerator.generate(req as Request);
+        expect(response).to.be.an.object();
+        expect(response.a).to.be.equal(1);
+        expect(response.b).to.be.equal(2);
+
+    });
+
+
 });

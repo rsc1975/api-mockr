@@ -22,7 +22,7 @@ describe('Testing server management', () => {
                 error: "${error}"
             }
         }
-        mockServer = new MockServer({responseConfig, apiPrefix: '/api', silent: true});
+        mockServer = new MockServer({responseConfig, apiPrefix: '/api', silent: true, version: 'test-version'});
         process.env.NODE_ENV = 'test';
     });
     afterEach(() => {
@@ -40,7 +40,7 @@ describe('Testing server management', () => {
             method: 'get',
             url: '/'
         });
-        expect(res.payload).to.be.equal(PING_MSG);
+        expect(res.payload).to.startWith(PING_MSG);
         expect(res.statusCode).to.be.equal(200);
     });
 
