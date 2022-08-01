@@ -2,7 +2,7 @@
   "name": "api-mockr",
   "version": "0.9.13",
   "description": "Just another API mocker that can be configured to response random and specific data",
-  "main": "src/index.ts",
+  "main": "dist/api-mockr.min.js",
   "scripts": {
     "start": "nodemon",
     "dev": "nodemon",
