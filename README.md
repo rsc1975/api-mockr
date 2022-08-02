@@ -14,6 +14,10 @@ Just another API mocker that can be configured to response random and specific d
 
 Currently, only REST API responses are supported.
 
+
+# Demo
+
+There is a demo available [here](https://api-mockr.dvlpr.tech/). The application is deployed in the free tier of [Cyclic](https://cyclic.sh/), so please, don't abuse.
 # Getting started
 
 This is a NodeJS application, you can install it as dev dependency in your project or as independent project, there is also a [Docker Image](https://hub.docker.com/r/dvlprtech/api-mockr).
