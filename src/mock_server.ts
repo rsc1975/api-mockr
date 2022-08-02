@@ -63,7 +63,7 @@ export class MockServer {
         srv.route({
             method: 'GET',
             path: '/',
-            handler: (_, __) => `${PING_MSG} (v${this.version})`
+            handler: (_, h) => h.response(`${PING_MSG} (v${this.version})`).header('content-type', 'text/plain').takeover()
         });
     
         // Create hapi server catchall route
@@ -112,7 +112,7 @@ export class MockServer {
             if (response.output?.statusCode === 404) {
                 return h.response(`Missing route, try: ${this.apiPrefix}/<anything>`).code(404).takeover();
             }
-            if (req.query[PRETTY_PARAM]) {
+            if (req.query[PRETTY_PARAM] && typeof response.source === 'object') {
                 response.spaces(2).takeover();
             }
             const forceError = !!req.query[FORCE_ERROR_PARAM];

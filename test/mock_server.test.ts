@@ -42,6 +42,11 @@ describe('Testing server management', () => {
         });
         expect(res.payload).to.startWith(PING_MSG);
         expect(res.statusCode).to.be.equal(200);
+        const res2 = await mockServer.server.inject({
+            method: 'get',
+            url: '/?_pretty=1'
+        });
+        expect(res2.payload).to.startWith(PING_MSG);
     });
 
     it('Server delay', async () => {
