@@ -1,10 +1,8 @@
-//export { Validator, ValidatorResult } from "https://cdn.jsdelivr.net/npm/jsonschema@1.4.1/lib/index.min.js";
-//export { Validator, ValidatorResult } from "https://raw.githubusercontent.com/tdegrunt/jsonschema/master/lib/index.d.ts";
-// "https://esm.sh/v91/jsonschema@1.4.1/lib/index.d.ts";
-// @deno-types=https://esm.sh/jsonschema@1.4.1/lib/index.d.ts
-import jsonschema from "https://esm.sh/jsonschema@1.4.1";
 
-export const { Validator, ValidatorResult} = jsonschema;
+import jsonschema from 'https://cdn.skypack.dev/jsonschema?dts';
+
+export const { Validator } = jsonschema;
+export { ValidatorResult } from "https://cdn.skypack.dev/-/jsonschema@v1.4.1-MTVDXYJUg6RdLoFkF6PF/dist=es2019,mode=types/lib/index.d.ts";
 
 export * as yaml from "https://deno.land/x/js_yaml_port@3.14.0/js-yaml.js"
 

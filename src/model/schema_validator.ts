@@ -1,7 +1,6 @@
-import { ValidatorResult } from "https://esm.sh/jsonschema@1.4.1/lib/index.d.ts";
 import { AnyObj } from "../common/utils.ts";
 
-import { Validator } from "../deps/schema.ts";
+import { Validator, ValidatorResult } from "../deps/schema.ts";
 
 // Address, to be embedded on Person
 const responsePayloadSchema = {
