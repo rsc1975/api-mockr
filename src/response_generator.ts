@@ -1,25 +1,28 @@
-import { Request } from "@hapi/hapi";
-import { ParamValues } from "./param_values_generator";
+// deno-lint-ignore-file no-explicit-any
+import { pathname } from "./common/utils.ts";
+import { StatusCode } from "./deps/hono.ts";
+import { ParamValues } from "./param_values_generator.ts";
 
-import { MockerConfig, HttpMethod, deepCopy, AllPathMatchers, PathMatcher, SingleResponseConfig, HttpMethodRoutesConfig } from './routes_config';
+import { MockerConfig, HttpMethod, deepCopy, AllPathMatchers, PathMatcher, SingleResponseConfig, HttpMethodRoutesConfig } from './routes_config.ts';
+
+type AnyObj = Record<string, unknown>;
 
 /**
  * Error response
  */
 type ErrorResponse = {
-  payload: object;
-  httpStatus: number;
+  payload: AnyObj;
+  httpStatus: StatusCode;
 }
-
 
 /**
  * Reference to one variable in config routes to be generated
  */
 class RefValue {
-  readonly obj: any;
+  readonly obj: AnyObj;
   readonly key: string;
 
-  constructor(obj: object, key: string) {
+  constructor(obj: AnyObj, key: string) {
     this.obj = obj;
     this.key = key;
   }
@@ -42,7 +45,7 @@ class RefValueObject extends RefValue {
   readonly pattern: string;
   readonly direct: boolean;
 
-  constructor(obj: object, key: string) {
+  constructor(obj: AnyObj, key: string) {
     super(obj, key);
     this.pattern = this.get().trim();
     this.vars = this.pattern.match(ALL_PATH_VARIABLE_EXP)!.map(v => v.replace(/[\$\{\}]/g, ''));
@@ -58,7 +61,7 @@ class RefValueArray extends RefValue {
   readonly length: number;
   readonly internalRefs: RefValue[];
 
-  constructor(obj: object, key: string, internalRefs: RefValue[] = []) {
+  constructor(obj: AnyObj, key: string, internalRefs: RefValue[] = []) {
     super(obj, key);
     this.internalRefs = internalRefs;
     const currentArray = this.get() as Array<any>;
@@ -155,18 +158,18 @@ export class ResponseGenerator {
   }
 
   private findMatchPath(request: Request): SingleResponseConfig {
-    if (request.query._clonePayload) {
-      return request.payload as SingleResponseConfig;
+    if (request.query('_clonePayload')) {
+      return request.json() as SingleResponseConfig;
     }
     let methodRouteConfig: HttpMethodRoutesConfig | undefined;
     const method = request.method.toLowerCase() as HttpMethod;
-    if (!!this.config.routes) {
+    if (this.config.routes) {
       methodRouteConfig = this.config.routes![method] || this.config.routes!['*'];
     }
     if (!methodRouteConfig) {
       return this.config.defaultResponse || {};
     }
-    const path = request.url.pathname.substring(this.apiPrefix.length);
+    const path = pathname(request.url).substring(this.apiPrefix.length);
 
     const pathMatchers: PathMatcher[] = this.config._rePath![method] || this.config._rePath!['*']!;
     const matchedPath = pathMatchers.find(m => m.re?.test(path) || m.path === path || m.path === '*');
@@ -175,7 +178,7 @@ export class ResponseGenerator {
       return this.config.defaultResponse || {};
     } else {
       this.matchedPath = matchedPath.path;
-      this.pathVars = matchedPath.re?.exec(path)!.slice(1).reduce((acc, v, i) => {
+      this.pathVars = matchedPath.re?.exec(path)!.slice(1).reduce((acc: Record<string, string>, v: string, i: number) => {
         acc[matchedPath.vars![i]] = v;
         return acc;
       }, {} as Record<string, string>) || {};
@@ -184,7 +187,7 @@ export class ResponseGenerator {
     }
   }
 
-  private findGeneratedValue(obj: object, key: string, value: any): RefValue[] {
+  private findGeneratedValue(obj: AnyObj, key: string, value: any): RefValue[] {
     if (typeof value === 'object') {
       return [...this.findAllGeneratedValues(value)];
     } else if ((typeof value === 'string') && PATH_VARIABLE_EXP.test(value)) {      
@@ -308,7 +311,7 @@ export class ResponseGenerator {
       httpStatus = 500;
     }
     delete errorTemplate.$httpStatus$;
-    return {payload: errorTemplate, httpStatus: httpStatus!} ;
+    return {payload: errorTemplate, httpStatus: httpStatus as StatusCode} ;
   }
 }
 
