@@ -1,7 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env deno
 'use strict';
 
-const path = require("path");
-const mockr = require(path.join('..', 'api-mockr.min'));
-
-mockr.run();
+//mockr.run();

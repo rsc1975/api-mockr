@@ -1,71 +1,63 @@
 'use strict';
 
-import { getParams } from '../src/cli_parser';
+import { assertStringIncludes } from 'https://deno.land/std@0.85.0/testing/asserts.ts';
+import { getParams } from '../src/cli_parser.ts';
+import { assertEquals, afterEach, assert, assertFalse, assertInstanceOf, beforeAll, describe, it, restore, stub, assertIsError, assertSpyCallArg, assertSpyCallArgs, assertSpyCalls } from './test_deps.ts';
 
-import Code from '@hapi/code';
-import Lab from '@hapi/lab';
-import Sinon from 'sinon';
-import fs from 'fs';
-
-const { expect } = Code;
-const { it, describe, before, afterEach } = exports.lab = Lab.script();
 
 describe('Testing CLI parser', () => {
 
-    before(() => {
-        process.env.NODE_ENV = 'test';
+    beforeAll(() => {
+        Deno.env.set('NODE_ENV', 'test');
     });
 
     afterEach(() => {
-        Sinon.restore();
+        restore();
     });
     
     it('checks default params', () => {
         const params = getParams();
-        expect(params).to.be.an.object();
-        expect(params.logRequestData).to.be.false;
-        expect(params.debug).to.be.false;
-        expect(params.config).to.be.undefined;
-        expect(params.port).to.be.equal(3003);
-        expect(params.host).to.be.equal('0.0.0.0');
+        assert(typeof params === 'object');
+        assertFalse(params.silent);
+        assertFalse(params.verbose);
+        assertEquals(params.config, []);
+        assertEquals(params.port, 3003);
+        assertEquals(params.host, '0.0.0.0');
     });
 
     it('checks config param', () => {
 
-        const cliParams = process.argv.concat(['--config', 'fichero1.yml', '--config', 'fichero2.yml']);
-        Sinon.stub(process, 'argv').get(() => cliParams);
+        const cliParams = ['--config', 'fichero1.yml', '--config', 'fichero2.yml', '--port', '8080'];
+        Object.defineProperty(Deno, 'args', { value: cliParams });
         
-        Sinon.stub(fs, 'existsSync').withArgs('fichero1.yml').returns(true)
-                    .withArgs('fichero2.yml').returns(true);
-        Sinon.stub(fs, 'readFileSync').returns("defaultResponse:\n    success: true\n");
+        const validResp = "defaultResponse:\n    success: true\n";
+        stub(Deno, 'readFileSync', () => new TextEncoder().encode(validResp));
 
         const params = getParams();
-        expect(params).to.be.an.object();
-        expect(params.logRequestData).to.be.false;
-        expect(params.debug).to.be.false;
-        expect(params.config).to.be.array;
-        expect(params.config).to.be.length(2);        
-        expect(params.port).to.be.equal(3003);
-        expect(params.host).to.be.equal('0.0.0.0');
+        assert(typeof params === 'object');
+        assertFalse(params.silent);
+        assertFalse(params.verbose);
+        assertEquals(params.config, ['fichero1.yml', 'fichero2.yml']);
+        assertEquals(params.port, 8080);
+        assertEquals(params.host, '0.0.0.0');
         
     });
 
     it('checks missing config file', () => {
-        const cliParams = process.argv.concat(['-c', 'fichero1.yml']);
-        Sinon.stub(process, 'argv').get(() => cliParams);
-        
-        const exitStub = Sinon.stub(process, 'exit').withArgs(-1).throws({error: 'Exit'});
-        Sinon.stub(fs, 'existsSync').withArgs('fichero1.yml').returns(false);
+        Object.defineProperty(Deno, 'args', { value: ['-c', 'fichero1.yml'] });
+        stub(Deno, 'readFileSync', () => {throw new Error("Missing file");});
+        const exitStub = stub(Deno, 'exit', () => { 
+            throw new Error('Exit'); 
+        } );
         
         try {
             getParams();
-        } catch(e:any) {
-            expect(e).to.be.an.object();
-            expect(e.error).to.be.equal('Exit');
+        } catch(e: unknown) {
+            assertIsError(e);
+            assertStringIncludes(e.toString(), 'Exit');
         }
-        expect(exitStub.calledOnce).to.be.true();
-        expect(exitStub.calledWith(-1)).to.be.true();
-        
+        assertSpyCalls(exitStub, 1);
+        assertSpyCallArgs(exitStub, 0, [-1]);
     });
 
 });

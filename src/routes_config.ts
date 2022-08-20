@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { AnyObj } from "./common/utils.ts";
-import { dirname, fromFileUrl, join, readFileSync } from "./deps/deno.ts";
+import { dirname, fromFileUrl, join } from "./deps/deno.ts";
 import { ValidatorResult, yaml } from "./deps/schema.ts";
 import { validateConfigSchema } from "./model/schema_validator.ts";
 
@@ -98,7 +98,7 @@ function isYaml(file: string): boolean {
 }
 
 export const loadConfigFile = (filePath: string): MockerConfig => {
-    const configFileContent = new TextDecoder('utf8').decode(readFileSync(filePath));
+    const configFileContent = new TextDecoder('utf8').decode(Deno.readFileSync(filePath));
     const config = isYaml(filePath) ? yaml.load(configFileContent) : JSON.parse(configFileContent);
     // TODO: validateConfigSchema(config);
     return config;

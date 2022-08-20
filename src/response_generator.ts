@@ -157,9 +157,9 @@ export class ResponseGenerator {
     }
   }
 
-  private findMatchPath(request: Request): SingleResponseConfig {
+  private async findMatchPath(request: Request): Promise<SingleResponseConfig> {
     if (request.query('_clonePayload')) {
-      return request.json() as SingleResponseConfig;
+      return await request.parseBody() as SingleResponseConfig;
     }
     let methodRouteConfig: HttpMethodRoutesConfig | undefined;
     const method = request.method.toLowerCase() as HttpMethod;
@@ -275,8 +275,8 @@ export class ResponseGenerator {
    * 
    * @returns {any} An object or array with the generated response
    */
-  public generate(request: Request): object | any[] {
-    const responseTemplate = deepCopy(this.findMatchPath(request));
+  public async generate(request: Request): Promise<AnyObj | any[]> {
+    const responseTemplate = deepCopy(await this.findMatchPath(request));
     if (Array.isArray(responseTemplate)) {
       let refValues : RefValue[] = [];
       if (responseTemplate.length > 1) {

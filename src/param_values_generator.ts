@@ -13,7 +13,7 @@ export class ParamValues {
     request: {
       path: (req: Request) => pathname(req.url),
       params: (req: Request, paramName?: string) => paramName ? req.query(paramName) : req.query(),
-      payload: async (req: Request, paramName?: string) => paramName ? (<AnyObj>await req.parsedBody || {})[paramName] : await req.parsedBody,
+      payload: async (req: Request, paramName?: string) => paramName ? (<AnyObj>await req.parseBody() || {})[paramName] : await req.parseBody(),
       headers: (req: Request, headerName?: string) => headerName ? req.header(headerName.toLowerCase()) : req.header(),
     },
     random: {
@@ -55,7 +55,7 @@ export class ParamValues {
     }
   }
 
-  public static get(paramName: string, req?: Request): Record<string, unknown> | number | string | boolean | null {
+  public static get(paramName: string, req?: Request): AnyObj | number | string | boolean | null {
     const [category, command, ...params] = paramName.split('.');
     const generator = ParamValues.generators[category as generatorCategory] as AnyObj;
     if (!generator) {

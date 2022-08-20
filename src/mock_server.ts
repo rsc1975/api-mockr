@@ -1,6 +1,7 @@
 //import { LogEvent, Request, ResponseToolkit, server as hapiServer, Server } from '@hapi/hapi';
+import { DELAY_PARAM, FORCE_ERROR_HEADER, FORCE_ERROR_MSG_HEADER, FORCE_ERROR_PARAM, PING_MSG, PRETTY_PARAM, RESPONSE_TIME_HEADER } from './common/http.ts';
 import { isEmpty, pathname } from './common/utils.ts';
-import { env, serve } from './deps/deno.ts';
+import { serve } from './deps/deno.ts';
 import { Context, cors, Hono, Next } from './deps/hono.ts';
 import { ResponseGenerator } from './response_generator.ts';
 import { MockerConfig } from './routes_config.ts';
@@ -19,13 +20,6 @@ interface MockServerInputParams {
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const PING_MSG = 'API Mockr';
-const PRETTY_PARAM = '_pretty';
-const DELAY_PARAM = '_delay';
-const FORCE_ERROR_PARAM = '_forceError';
-const FORCE_ERROR_HEADER = 'x-mocker-force-error';
-const FORCE_ERROR_MSG_HEADER = 'x-mocker-error-msg';
-const RESPONSE_TIME_HEADER = 'x-mocker-response-time';
 export class MockServer {
     public server: Hono;
     public version: string;
@@ -39,13 +33,13 @@ export class MockServer {
 
 
     constructor({host, port, apiPrefix, verbose, silent, responseConfig, version} : MockServerInputParams = {}) {
-        this.apiPrefix = apiPrefix || env.get('MOCKER_PREFIX') || '';
+        this.apiPrefix = apiPrefix || Deno.env.get('MOCKER_PREFIX') || '';
         if (!this.apiPrefix.startsWith("/") && !!this.apiPrefix) {
             this.apiPrefix = "/" + this.apiPrefix;
           }
         this.version = version || 'unknown';
-        this.host = host || env.get('MOCKER_BINDING') || '0.0.0.0';
-        this.port = port || +(env.get('MOCKER_PORT') || 3003);
+        this.host = host || Deno.env.get('MOCKER_BINDING') || '0.0.0.0';
+        this.port = port || +(Deno.env.get('MOCKER_PORT') || 3003);
         this.silent = !!silent;
         this.verbose = !this.silent && !!verbose;
         this.responseConfig = responseConfig || {};
@@ -151,7 +145,7 @@ export class MockServer {
         
 
         srv.use('*', async (c: Context, next: Next) => {
-            const { res, req } = c;
+            const { req } = c;
             const forceError = !!req.query(FORCE_ERROR_PARAM);
             const errorCode = +req.header(FORCE_ERROR_HEADER);
             if (!!errorCode || forceError) {                
@@ -162,15 +156,17 @@ export class MockServer {
             }
             
             await next();
-            if (res.status === 404) {
-                return c.text(`Missing route, try: ${this.apiPrefix}/<anything>`, 404);
-            }
+            
+        });
+
+        srv.notFound((c: Context) => {
+            return c.text(`Missing route, try: ${this.apiPrefix}/<anything>`, 404);
         });
 
         srv.use(`${this.apiPrefix}/*`, async (c: Context, next: Next) => {
             if (pathname(c.req.url) !== '/') {
                 const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
-                return c.json(responseGenerator.generate(c.req));
+                return c.json(await responseGenerator.generate(c.req));
             } else {
                 await next();
             }
@@ -178,18 +174,6 @@ export class MockServer {
 
         srv.get('/', (c) => c.text(`${PING_MSG} (v${this.version})`));
 
-
-        // Create hapi server catchall route
-        // srv.route({
-        //     method: '*',
-        //     path: `${this.apiPrefix}/{p*}`,
-        //     handler: (req: Request, h : ResponseToolkit) => {
-        //         const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
-        //         return responseGenerator.generate(req);
-        //     }
-        // });
-    
-        
         return srv;
     
     }
