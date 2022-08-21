@@ -2,6 +2,7 @@ import { getParams } from './cli_parser.ts';
 import { getVersion } from './common/utils.ts';
 import { MockServer } from './mock_server.ts';
 
+export const VERSION = await getVersion();
 
 export const run = async () => {
     

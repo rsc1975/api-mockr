@@ -18,6 +18,7 @@ export class ParamValues {
         if (body instanceof ArrayBuffer) {
           return undefined;
         }
+        console.log(typeof body, body);
         return paramName ? (body as AnyObj)[paramName] : body;
       },
       headers: (req: Request, headerName?: string) => headerName ? req.header(headerName.toLowerCase()) : req.header(),

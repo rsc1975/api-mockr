@@ -236,10 +236,10 @@ export class ResponseGenerator {
     const currentArray = rva.get() as Array<any>;
 
     const setRefValues = (refs: RefValue[]) => {
-      for (let ref of refs.filter(ref => ref instanceof RefValueObject)) {
+      for (const ref of refs.filter(ref => ref instanceof RefValueObject)) {
         this.generateValueObj(request, ref as RefValueObject);
       }
-      for (let ref of refs.filter(ref => ref instanceof RefValueArray)) {
+      for (const ref of refs.filter(ref => ref instanceof RefValueArray)) {
         this.generateValueArray(request, ref as RefValueArray);
       }
     }
