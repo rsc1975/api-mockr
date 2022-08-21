@@ -1,5 +1,5 @@
 import { validateConfigSchema } from "../../src/model/schema_validator.ts";
-import { afterEach, assert, assertEquals, beforeAll, describe, it } from "../test_deps.ts";
+import { afterEach, assertEquals, beforeAll, describe, it } from "../test_deps.ts";
 
 const okConfig = {
   "routes": {

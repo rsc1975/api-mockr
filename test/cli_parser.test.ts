@@ -2,7 +2,7 @@
 
 import { assertStringIncludes } from 'https://deno.land/std@0.85.0/testing/asserts.ts';
 import { getParams } from '../src/cli_parser.ts';
-import { assertEquals, afterEach, assert, assertFalse, assertInstanceOf, beforeAll, describe, it, restore, stub, assertIsError, assertSpyCallArg, assertSpyCallArgs, assertSpyCalls } from './test_deps.ts';
+import { afterEach, assert, assertEquals, assertFalse, assertIsError, assertSpyCallArgs, assertSpyCalls, beforeAll, describe, it, restore, stub } from './test_deps.ts';
 
 
 describe('Testing CLI parser', () => {
@@ -16,6 +16,7 @@ describe('Testing CLI parser', () => {
     });
     
     it('checks default params', () => {
+        Object.defineProperty(Deno, 'args', { value: [] });
         const params = getParams();
         assert(typeof params === 'object');
         assertFalse(params.silent);

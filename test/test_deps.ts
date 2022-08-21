@@ -1,6 +1,10 @@
 export * from "../src/deps/deno.ts";
 export * from "../src/deps/hono.ts";
 
+//export  {type PermissionDescriptor, PermissionStatus } from Deno.PermissionStatus;
+
+
+
 export {
     assertSpyCalls,
     assertSpyCall,
@@ -39,3 +43,6 @@ export {
 
 
 export { extendRequestPrototype } from 'https://deno.land/x/hono@v2.0.9/request.ts';
+
+// deno-lint-ignore no-explicit-any
+export const toAny = (o: unknown) : any => o as any;

@@ -41,7 +41,7 @@ export const getParams = () : ToolOptions => {
   const opts = parse(Deno.args, parseConfig) as ToolOptions;
 
   const extraConfig : MockerConfig[] = [];
-  for (const fPath of opts.config || []) {
+  for (const fPath of opts.config) {
     try {
       extraConfig.push(loadConfigFile(fPath));
     } catch (_) {

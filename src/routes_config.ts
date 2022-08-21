@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { AnyObj } from "./common/utils.ts";
 import { dirname, fromFileUrl, join } from "./deps/deno.ts";
-import { ValidatorResult, yaml } from "./deps/schema.ts";
+import { yaml } from "./deps/schema.ts";
 import { validateConfigSchema } from "./model/schema_validator.ts";
 
 

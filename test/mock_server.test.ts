@@ -1,8 +1,9 @@
 import { assertFalse } from "https://deno.land/std@0.152.0/testing/asserts.ts";
+import { assertSpyCallArgs } from "https://deno.land/std@0.152.0/testing/mock.ts";
 import { assertExists } from "https://deno.land/std@0.85.0/testing/asserts.ts";
 import { PING_MSG, RESPONSE_TIME_HEADER } from "../src/common/http.ts";
 import { MockServer } from "../src/mock_server.ts";
-import { afterEach, assertStringIncludes, assert, assertEquals, assertInstanceOf, beforeAll, describe, Hono, it, restore } from "./test_deps.ts";
+import { stub, assertMatch, afterEach, assertStringIncludes, assert, assertEquals, assertInstanceOf, beforeAll, describe, Hono, it, restore, spy, assertSpyCalls, assertSpyCallArg } from "./test_deps.ts";
 
 
 describe('Testing server management', () => {
@@ -32,14 +33,35 @@ describe('Testing server management', () => {
     });
     
     it('Server ping', async () => {
-        const req = new Request(`${baseUrl}/`, {
-            method: 'GET',
-        });
-        const res = await mockServer.server.request(req);
+        const req = new Request(`${baseUrl}/`);
+        const localMockServer : MockServer = new MockServer({silent: true});
+        const res = await localMockServer.server.request(req);
         assert((await res.text()).startsWith(PING_MSG));        
         assertEquals(res.status, 200);
-
     });
+
+    
+    it('Server elapsed time', async () => {
+        const req = new Request(`${baseUrl}/`);
+        stub(Deno.permissions, 'query', () => {            
+            return Promise.resolve({state: "granted" as Deno.PermissionState, onchange: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => true});
+        });
+        await mockServer.checkHRTime();
+        const res = await mockServer.server.request(req);
+        assertEquals(res.status, 200);
+        assertExists(res.headers.get(RESPONSE_TIME_HEADER));
+        assertMatch(res.headers.get(RESPONSE_TIME_HEADER)!, /\d+ us/);        
+
+        restore();
+        stub(Deno.permissions, 'query', () => {            
+            return Promise.resolve({state: "denied" as Deno.PermissionState, onchange: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => true});
+        });
+        await mockServer.checkHRTime();
+        const res2 = await mockServer.server.request(req);        
+        assertEquals(res2.status, 200);
+        assertMatch(res2.headers.get(RESPONSE_TIME_HEADER)!, /\d+ ms/);        
+    });
+    
 
     it('Server delay', async () => {
         const t0 = Date.now();
@@ -105,101 +127,100 @@ describe('Testing server management', () => {
         assertStringIncludes(textPayload, '\n');
     });
 
-    // it('Start/stop server', async () => {
-    //     const localMockServer : MockServer = new MockServer({host:'localhost', port:33333, apiPrefix:'/testapi', silent: true});
-    //     expect(localMockServer.apiPrefix).to.be.equal("/testapi");
-    //     expect(localMockServer.host).to.be.equal("localhost");
-    //     expect(localMockServer.port).to.be.equal(33333);
+    it('Start/stop server', async () => {
+        const localMockServer : MockServer = new MockServer({host:'localhost', port:33333, apiPrefix:'/testapi', silent: true});
+        
+        assertEquals(localMockServer.apiPrefix, "/testapi");
+        assertEquals(localMockServer.host, "localhost");
+        assertEquals(localMockServer.port, 33333);
 
-    //     setTimeout(async () => {
-    //         await localMockServer.dispose();
-    //     }, 100);
+        setTimeout(async () => {
+            await localMockServer.stop();
+        }, 100);
 
-    //     await localMockServer.start();
-    // });
+        await localMockServer.start();
+    });
 
     
-    // it('Server env params', async () => {
-    //     process.env.MOCKER_PREFIX = 'test';
-    //     process.env.MOCKER_BINDING = 'localhost';
-    //     process.env.MOCKER_PORT = '5555';
+    it('Server env params', () => {
+        Deno.env.set('MOCKR_PREFIX', 'test');
+        Deno.env.set('MOCKR_BINDING', 'localhost');
+        Deno.env.set('MOCKR_PORT', '5555');
 
-    //     const localMockServer : MockServer = new MockServer({silent: true});
-    //     expect(localMockServer.apiPrefix).to.be.equal("/test");
-    //     expect(localMockServer.host).to.be.equal("localhost");
-    //     expect(localMockServer.port).to.be.equal(5555);
+        const localMockServer : MockServer = new MockServer({silent: true});
+        assertEquals(localMockServer.apiPrefix, "/test");
+        assertEquals(localMockServer.host, "0.0.0.0");
+        assertEquals(localMockServer.port, 5555);
 
-    //     process.env.MOCKER_PREFIX = '';
+        Deno.env.set('MOCKR_PREFIX', '');
         
-    //     expect(new MockServer().apiPrefix).to.be.equal("");
+        assertEquals(new MockServer().apiPrefix, "");        
 
-    // });
+    });
 
-    // it('Log request data verbose', async () => {
-    //     const localMockServer : MockServer = new MockServer({apiPrefix:'/api', verbose:true});
-    //     const logServer = Sinon.stub(localMockServer.server, 'log');
-    //     const res = await localMockServer.server.inject({
-    //         method: 'POST',
-    //         url: '/api/whatever?hola=caracola&foo=bar',
-    //         payload: "{ name: 'Rob' }",
-    //         headers: {
-    //             'content-type': 'text/plain',
-    //         }
-    //     });
-    //     expect(res.statusCode).to.be.equal(200);
-    //     expect(logServer.calledTwice).be.true();
+    it('Log request data verbose', async () => {
+        const localMockServer : MockServer = new MockServer({apiPrefix:'/api', verbose:true});
+        const logServer = spy(localMockServer, 'log');
+        const res = await localMockServer.server.request(new Request('http://localhost/api/whatever?hola=caracola&foo=bar', {
+            method: 'POST',            
+            body: "{ name: 'Rob' }",
+            headers: {
+                'content-type': 'text/plain',
+            }
+        }));
+        assertEquals(res.status, 200);
+        assertSpyCalls(logServer, 2);
         
-    //     Sinon.assert.match(logServer.getCall(0).args[1], /DEBUG.*POST.*api\/whatever.*hola.*caracola.*name.*Rob/);
-    //     Sinon.assert.match(logServer.getCall(1).args[1], /INFO.*POST.*api\/whatever.*200.*json/);
-
-    //     const res2 = await localMockServer.server.inject({
-    //         method: 'POST',
-    //         url: '/api/whatever',
-    //         payload: { name: 'Rob' },
-    //     });
-    //     expect(res.statusCode).to.be.equal(200);
-    //     expect(logServer.callCount).be.equal(4);
+        assertSpyCallArg(logServer, 0, 0, 'verbose');
+        assertMatch(logServer.calls.at(0)?.args[1]!, /DEBUG.*POST.*api\/whatever.*hola.*caracola.*name.*Rob/);
         
-    //     Sinon.assert.match(logServer.getCall(0).args[1], /DEBUG.*POST.*api\/whatever.*name.*Rob/);
-    //     Sinon.assert.match(logServer.getCall(1).args[1], /INFO.*POST.*api\/whatever.*200.*json/);
+        //assertSpyCallArg(logServer, 1, [/INFO.*POST.*api\/whatever.*200.*json/]);
+
+        const res2 = await localMockServer.server.request(new Request('http://localhost/api/whatever', {
+            method: 'POST',            
+            body: '{ "name": "Rob" }',
+            headers: {
+                'content-type': 'application/json',
+            }
+        }));
+        assertEquals(res2.status, 200);
+        assertSpyCalls(logServer, 4);
+        
+        assertSpyCallArg(logServer, 2, 0, 'verbose');
+        assertMatch(logServer.calls.at(2)?.args[1]!, /DEBUG.*POST.*api\/whatever.*name.*Rob/);
+        assertMatch(logServer.calls.at(3)?.args[0]!, /INFO.*POST.*api\/whatever.*200.*json/);
 
 
-    //     const res3 = await localMockServer.server.inject({
-    //         method: 'GET',
-    //         url: '/api/whatever'
-    //     });
-    //     expect(res3.statusCode).to.be.equal(200);
-    //     expect(logServer.callCount).be.equal(6);
-    // });
+        const res3 = await localMockServer.server.request(new Request('http://loclahost/api/whatever'));
+        assertEquals(res3.status, 200);
+        assertSpyCalls(logServer, 6);
+        assertSpyCallArg(logServer, 4, 0, 'verbose');
+        assertMatch(logServer.calls.at(4)?.args[1]!, /DEBUG.*GET.*api\/whatever/);
+        assertMatch(logServer.calls.at(5)?.args[0]!, /INFO.*GET.*api\/whatever.*200/);
+    });
 
     
-    // it('Log request data NO verbose', async () => {
-    //     const localMockServer : MockServer = new MockServer({apiPrefix:'/api', silent: true});
-    //     const logServer = Sinon.stub(localMockServer.server, 'log');
-    //     const res = await localMockServer.server.inject({
-    //         method: 'GET',
-    //         url: '/api/getting_things?hola=caracola&foo=bar',
-    //         payload: {
-    //             name: 'Rob',
-    //         }
-    //     });
-    //     expect(res.statusCode).to.be.equal(200);
-    //     expect(logServer.calledOnce).be.true();
-        
-    //     Sinon.assert.match(logServer.getCall(0).args[1], /INFO.*GET.*api\/getting_things.*200.*json/);
+    it('Log request data NO verbose', async () => {
+        const localMockServer : MockServer = new MockServer({apiPrefix:'/api', silent: true});
+        const logServer = spy(localMockServer, 'log');
+        const logConsole = spy(console, 'info');
+        const res = await localMockServer.server.request(new Request('http://localhost/api/getting_things?hola=caracola&foo=bar'));
+        assertEquals(res.status, 200);
+        assertSpyCalls(logServer, 1);
+        assertSpyCalls(logConsole, 0);        
 
-    // });
+    });
 
     // it('Log event with silent/no-silent', async () => {
     //     const localMockServer : MockServer = new MockServer({apiPrefix:'/api', silent:true});
     //     const logConsole = Sinon.stub(console, 'info');
 
     //     await localMockServer.server.events.emit({name: 'log', tags: {'info':true}}, {data:'test-silent'});
-    //     expect(logConsole.called).be.false();
+    //     assert(logConsole.called).be.false();
     //     localMockServer.silent = false;
     //     await localMockServer.server.events.emit({name: 'log', tags: {'info':true}}, {data:'test-NO-silent'});
-    //     expect(logConsole.calledOnce).be.true();
-    //     expect(logConsole.getCall(0).args[0]).to.be.equal('test-NO-silent');
+    //     assert(logConsole.calledOnce).be.true();
+    //     assert(logConsole.getCall(0).args[0]).to.be.equal('test-NO-silent');
 
     // });
 
@@ -208,17 +229,17 @@ describe('Testing server management', () => {
     //     const localMockServer : MockServer = new MockServer({apiPrefix:'/api', verbose:true, silent: true});
     //     const logConsole = Sinon.stub(console, 'info');
     //     await localMockServer.server.events.emit({name: 'log', tags: {'verbose':true}}, {data:'test-verbose'});
-    //     expect(localMockServer.verbose).be.false();
-    //     expect(logConsole.called).be.false();
+    //     assert(localMockServer.verbose).be.false();
+    //     assert(logConsole.called).be.false();
     //     localMockServer.verbose = true;
     //     localMockServer.silent = false;
 
     //     await localMockServer.server.events.emit({name: 'log', tags: {'verbose':false}}, {data:'test-verbose'});
-    //     expect(logConsole.called).be.false();
+    //     assert(logConsole.called).be.false();
         
     //     await localMockServer.server.events.emit({name: 'log', tags: {'verbose':true}}, {data:'test-verbose'});
-    //     expect(logConsole.calledOnce).be.true();
-    //     expect(logConsole.getCall(0).args[0]).to.be.equal('test-verbose');
+    //     assert(logConsole.calledOnce).be.true();
+    //     assert(logConsole.getCall(0).args[0]).to.be.equal('test-verbose');
 
     // });
 

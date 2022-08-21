@@ -246,7 +246,7 @@ describe('Testing response generators', () => {
         }
         const req = createRequest('/api/user');
         const respGenerator : ResponseGenerator = new ResponseGenerator(newConfig, '/api');
-        let response : any = respGenerator.generateError(req, "Prueba", 404);
+        let response = respGenerator.generateError(req, "Prueba", 404);
         
         assertEquals(response.payload.success, false);
         assertEquals(response.payload.error, "Prueba");

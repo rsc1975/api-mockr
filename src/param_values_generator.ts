@@ -13,7 +13,13 @@ export class ParamValues {
     request: {
       path: (req: Request) => pathname(req.url),
       params: (req: Request, paramName?: string) => paramName ? req.query(paramName) : req.query(),
-      payload: async (req: Request, paramName?: string) => paramName ? (<AnyObj>await req.parseBody() || {})[paramName] : await req.parseBody(),
+      payload: async (req: Request, paramName?: string) => {
+        const body = await req.parseBody();
+        if (body instanceof ArrayBuffer) {
+          return undefined;
+        }
+        return paramName ? (body as AnyObj)[paramName] : body;
+      },
       headers: (req: Request, headerName?: string) => headerName ? req.header(headerName.toLowerCase()) : req.header(),
     },
     random: {

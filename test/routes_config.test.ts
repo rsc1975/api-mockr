@@ -1,11 +1,8 @@
 
 import { assertStringIncludes } from 'https://deno.land/std@0.85.0/testing/asserts.ts';
 import { deepCopy, defaultResponseConfig, getConfig, loadConfigFile, MockerConfig, SingleResponseConfig } from '../src/routes_config.ts';
-import { afterEach, assertEquals, assertExists, assertNotEquals, beforeAll, describe, fail, it, restore, stub } from './test_deps.ts';
+import { afterEach, assertEquals, assertExists, assertNotEquals, beforeAll, describe, fail, it, restore, stub, toAny } from './test_deps.ts';
 
-
-// deno-lint-ignore no-explicit-any
-const obj = (o: unknown) : any => o as any;
 
 describe('Testing routes config', () => {
 
@@ -50,7 +47,7 @@ describe('Testing routes config', () => {
                 }
             }
         };
-        const composedConfig = obj(getConfig(newconfig as MockerConfig));
+        const composedConfig = toAny(getConfig(newconfig as MockerConfig));
         assertEquals(composedConfig.defaultResponse!['success'], true);
         assertEquals(typeof composedConfig.routes!['*']!["/${id}"], 'object');
         assertEquals(composedConfig.routes!['*']!["/${id}"]['success'], false);
@@ -71,8 +68,8 @@ describe('Testing routes config', () => {
             getConfig(wrongConfig as MockerConfig);
             fail('Should have thrown an error with an invalid config');
         } catch(err: unknown) {
-            assertStringIncludes(obj(err).message, 'ERROR validating config')
-            assertStringIncludes(obj(err).message, 'routes_missing');
+            assertStringIncludes(toAny(err).message, 'ERROR validating config')
+            assertStringIncludes(toAny(err).message, 'routes_missing');
         }
         
     });
@@ -84,7 +81,7 @@ describe('Testing routes config', () => {
                 internal: 'Hi'
             }
         };
-        const objCopy = obj(deepCopy(data));
+        const objCopy = toAny(deepCopy(data));
         assertEquals(typeof objCopy, 'object');
         assertEquals(objCopy.foo, 123);
         assertEquals(objCopy.bar.internal, 'Hi');

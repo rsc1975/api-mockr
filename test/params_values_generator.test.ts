@@ -65,6 +65,7 @@ describe('Testing params values generator', () => {
 
         assertEquals(value, 'baz');
         assertEquals(value, req.query('bar'));        
+
     });
 
 
@@ -88,6 +89,13 @@ describe('Testing params values generator', () => {
 
         const value2 = await ParamValues.get('request.payload.email_missing', req);
         assertEquals(value2, undefined);
+        
+        const req2 = new Request('http://localhost:3003/api/');
+        console.log(await req2.parseBody());
+        const value3 = await ParamValues.get('request.payload.whatever', req2);
+
+        assertEquals(value3, undefined);
+        
     });
 
     it('checks ParamValues for request.headers', () => {
@@ -205,8 +213,12 @@ describe('Testing params values generator', () => {
         value = ParamValues.get('random.city') as string;
         assertEquals(typeof value, 'string');
         assert(value.length > 1, 'string value is not empty');
+        value = ParamValues.get('random.personLastName') as string;
+        assertEquals(typeof value, 'string');
+        assert(value.length > 1, 'string value is not empty');        
         value = ParamValues.get('random.phone') as string;
         assertEquals(typeof value, 'string');
+        
         assert(value.length > 1, 'string value is not empty');
         value = ParamValues.get('random.country') as string;
         assertEquals(typeof value, 'string');
@@ -235,6 +247,9 @@ describe('Testing params values generator', () => {
         value = ParamValues.get('random.countryCode') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /^[\w]+$/, 'value is a country code');
+        value = ParamValues.get('random.hexColor') as string;
+        assertEquals(typeof value, 'string');
+        assertMatch(value, /^#[0-aa-f]+$/, 'value is html color');
         value = ParamValues.get('random.zipCode') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /^[\d-]+$/, 'value is a zip code');
