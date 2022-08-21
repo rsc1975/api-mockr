@@ -159,7 +159,6 @@ export class MockServer {
         });
 
         srv.use(`${this.apiPrefix}/*`, async (c: Context, next: Next) => {
-            console.log('pathname', pathname(c.req.url));
             if (pathname(c.req.url) !== '/') {
                 const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
                 return c.json(await responseGenerator.generate(c.req));
