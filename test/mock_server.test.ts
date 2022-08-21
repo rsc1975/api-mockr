@@ -1,5 +1,4 @@
 import { assertFalse } from "https://deno.land/std@0.152.0/testing/asserts.ts";
-import { assertSpyCallArgs } from "https://deno.land/std@0.152.0/testing/mock.ts";
 import { assertExists } from "https://deno.land/std@0.85.0/testing/asserts.ts";
 import { PING_MSG, RESPONSE_TIME_HEADER } from "../src/common/http.ts";
 import { MockServer } from "../src/mock_server.ts";
