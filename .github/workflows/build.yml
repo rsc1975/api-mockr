@@ -30,7 +30,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
-      - run: deno bundle src/index.ts -- api-mocker.ts
+      - run: deno bundle src/index.ts -- api-mockr.ts
       - run: |
               echo "APP_VERSION=$(cat version.txt)" >> $GITHUB_ENV
               echo APP_NAME=api-mockr >> $GITHUB_ENV              
@@ -44,7 +44,9 @@ jobs:
           name: dist-with-dockerfile
           retention-days: 1
           path: |
-                api-mocker.ts
+                version.txt
+                config/
+                api-mockr.ts
                 Dockerfile
       - name: "Show result: ${{ job.status }}"
         run: |
