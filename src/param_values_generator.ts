@@ -68,15 +68,15 @@ export class ParamValues {
     }
   }
 
-  public static async get(paramName: string, req?: Request): Promise<AnyObj | number | string | boolean | null> {
+  public static async get(paramName: string, req?: Request): Promise<AnyObj | number | string | boolean | undefined> {
     const [category, command, ...params] = paramName.split('.');
     const generator = ParamValues.generators[category as generatorCategory] as AnyObj;
     if (!generator) {
-      return null;
+      return undefined;
     }
     const commandFn = generator[command] as generatorFn;
     if (!commandFn) {
-      return null;
+      return undefined;
     }
 
     const commandParams = (category === 'request') ? [req, ...params] : params;

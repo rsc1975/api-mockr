@@ -34,24 +34,23 @@ describe('Testing params values generator', () => {
         return request; 
     }
 
-    it('checks ParamValues for unknown', () => {
-        
-        assert(ParamValues.get('nothing_to_do') == undefined);
-        assert(ParamValues.get('request.whatever') == undefined);
-        assert(ParamValues.get('random.whatever') == undefined);
+    it('checks ParamValues for unknown', async () => {
+        assertEquals(await ParamValues.get('nothing_to_do'), undefined);
+        assertEquals(await ParamValues.get('request.whatever'), undefined);
+        assertEquals(await ParamValues.get('random.whatever'), undefined);
     });
 
-    it('checks ParamValues for request.path', () => {
+    it('checks ParamValues for request.path', async () => {
         const req = createRequest();
-        const value = ParamValues.get('request.path', req);
+        const value = await ParamValues.get('request.path', req);
 
         assertEquals(value, pathname(req.url));
         assertEquals(value, '/api/test');
     });
 
-    it('checks ParamValues for request.params', () => {
+    it('checks ParamValues for request.params', async () => {
         const req = createRequest();
-        const value = ParamValues.get('request.params', req);
+        const value = await ParamValues.get('request.params', req);
 
         assertEquals(value, req.query());
         assertEquals((value as AnyObj).bar, 'baz');
@@ -59,9 +58,9 @@ describe('Testing params values generator', () => {
 
     });
 
-    it('checks ParamValues for request.params.bar', () => {
+    it('checks ParamValues for request.params.bar', async () => {
         const req = createRequest();
-        const value = ParamValues.get('request.params.bar', req);
+        const value = await ParamValues.get('request.params.bar', req);
 
         assertEquals(value, 'baz');
         assertEquals(value, req.query('bar'));        
@@ -98,17 +97,17 @@ describe('Testing params values generator', () => {
         
     });
 
-    it('checks ParamValues for request.headers', () => {
+    it('checks ParamValues for request.headers', async () => {
         const req = createRequest();
-        const value = ParamValues.get('request.headers', req) as AnyObj;
+        const value = await ParamValues.get('request.headers', req) as AnyObj;
 
         assertExists(value);
         assertEquals(value, req.header());
     });
 
-    it('checks ParamValues for request.headers.custom', () => {
+    it('checks ParamValues for request.headers.custom', async () => {
         const req = createRequest();
-        const value = ParamValues.get('request.headers.X-CUSTOM-HEADER', req);
+        const value = await ParamValues.get('request.headers.X-CUSTOM-HEADER', req);
 
         assertExists(value);
         assertEquals(value, req.headers.get('X-CUSTOM-HEADER'));
@@ -118,167 +117,167 @@ describe('Testing params values generator', () => {
 
 //     // RANDOM VALUES
 
-    it('checks ParamValues for random.integer', () => {
-        const value = ParamValues.get('random.integer') as number;
+    it('checks ParamValues for random.integer', async () => {
+        const value = await ParamValues.get('random.integer') as number;
 
         assertEquals(typeof value, 'number');
         assert(value > -1, 'value is greater than -1');
         assertEquals(value % 1, 0, 'value is an integer');
     });
 
-    it('checks ParamValues for random.integer.10', () => {
-        const value = ParamValues.get('random.integer.10') as number;
+    it('checks ParamValues for random.integer.10', async () => {
+        const value = await ParamValues.get('random.integer.10') as number;
 
         assertEquals(typeof value, 'number');
         assert(value >= 0 && value <= 10, 'value is between 0 and 10');
     });
 
-    it('checks ParamValues for random.float', () => {
-        const value = ParamValues.get('random.float') as number;
+    it('checks ParamValues for random.float', async () => {
+        const value = await ParamValues.get('random.float') as number;
 
         assertEquals(typeof value, 'number');
         assert(value >= 0 && value <= 100, 'value is between 0 and 100');
         assertNotEquals(value % 1, 0, 'value is not integer'); // this is actually not probable
     });
 
-    it('checks ParamValues for random.float.1', () => {
-        const value = ParamValues.get('random.float.1') as number;
+    it('checks ParamValues for random.float.1', async () => {
+        const value = await ParamValues.get('random.float.1') as number;
 
         assertEquals(typeof value, 'number');
         assert(value >= 0 && value <= 1, 'value is between 0 and 1');
 
     });
 
-    it('checks ParamValues for random.boolean', () => {
-        const value = ParamValues.get('random.boolean') as boolean;
+    it('checks ParamValues for random.boolean', async () => {
+        const value = await ParamValues.get('random.boolean') as boolean;
 
         assertEquals(typeof value, 'boolean');
     });
 
-    it('checks ParamValues for random.choose.foo.bar.hi', () => {
-        const value = ParamValues.get('random.choose.foo.bar.hi') as string;
+    it('checks ParamValues for random.choose.foo.bar.hi', async () => {
+        const value = await ParamValues.get('random.choose.foo.bar.hi') as string;
 
         assertEquals(typeof value, 'string');
         assertArrayIncludes('foo.bar.hi'.split('.'), [value]);
     });
 
-    it('checks ParamValues for random.choose null', () => {
-        const value = ParamValues.get('random.choose') as string;
+    it('checks ParamValues for random.choose null', async () => {
+        const value = await ParamValues.get('random.choose') as string;
 
         assert(value == null, 'value is null');
     });
 
-    it('checks ParamValues for random.email', () => {
-        const value = ParamValues.get('random.email') as string;
+    it('checks ParamValues for random.email', async () => {
+        const value = await ParamValues.get('random.email') as string;
         assertMatch(value, emailRegExp);
     });
 
-    it('checks ParamValues for random.email.dvlpr.tech', () => {
-        const value = ParamValues.get('random.email.dvlpr.tech') as string;
+    it('checks ParamValues for random.email.dvlpr.tech', async () => {
+        const value = await ParamValues.get('random.email.dvlpr.tech') as string;
 
         assertMatch(value, emailRegExp);
         assertMatch(value, /@dvlpr.tech$/);
     });
 
-    it('checks ParamValues for random.personFullName', () => {
-        const value = ParamValues.get('random.personFullName') as string;
+    it('checks ParamValues for random.personFullName', async () => {
+        const value = await ParamValues.get('random.personFullName') as string;
 
         assertEquals(typeof value, 'string');
         assert(value.split(' ').length > 1, 'value has at least two words');
 
-        const valueFemale = ParamValues.get('random.personFullName.female') as string;
+        const valueFemale = await ParamValues.get('random.personFullName.female') as string;
 
         assertEquals(typeof valueFemale, 'string');
         assert(valueFemale.split(' ').length > 1, 'value has at least two words');
         
     });
 
-    it('checks ParamValues for random.personFirstName', () => {
-        const value = ParamValues.get('random.personFirstName') as string;
+    it('checks ParamValues for random.personFirstName', async () => {
+        const value = await ParamValues.get('random.personFirstName') as string;
 
         assertEquals(typeof value, 'string');
         assert(value.split(' ').length === 1, 'value has only one word');
 
-        const valueMale = ParamValues.get('random.personFirstName.male') as string;
+        const valueMale = await ParamValues.get('random.personFirstName.male') as string;
 
         assertEquals(typeof valueMale, 'string');
         
         assert(valueMale.split(' ').length === 1, 'value has only one word');
     });
 
-    it('checks ParamValues for random params', () => {
-        let value = ParamValues.get('random.url') as string;
+    it('checks ParamValues for random params', async () => {
+        let value = await ParamValues.get('random.url') as string;
         assert(value.startsWith('http'));
 
-        value = ParamValues.get('random.city') as string;
+        value = await ParamValues.get('random.city') as string;
         assertEquals(typeof value, 'string');
         assert(value.length > 1, 'string value is not empty');
-        value = ParamValues.get('random.personLastName') as string;
+        value = await ParamValues.get('random.personLastName') as string;
         assertEquals(typeof value, 'string');
         assert(value.length > 1, 'string value is not empty');        
-        value = ParamValues.get('random.phone') as string;
+        value = await ParamValues.get('random.phone') as string;
         assertEquals(typeof value, 'string');
         
         assert(value.length > 1, 'string value is not empty');
-        value = ParamValues.get('random.country') as string;
+        value = await ParamValues.get('random.country') as string;
         assertEquals(typeof value, 'string');
         assert(value.length > 1, 'string value is not empty');
-        value = ParamValues.get('random.sport') as string;
+        value = await ParamValues.get('random.sport') as string;
         assertEquals(typeof value, 'string');
         assert(value.length > 1, 'string value is not empty');
-        value = ParamValues.get('random.brand') as string;
+        value = await ParamValues.get('random.brand') as string;
         assertEquals(typeof value, 'string');
         assert(value.length > 1, 'string value is not empty');
-        value = ParamValues.get('random.company') as string;
+        value = await ParamValues.get('random.company') as string;
         assertEquals(typeof value, 'string');
         assert(value.length > 1, 'string value is not empty');
-        value = ParamValues.get('random.username') as string;
+        value = await ParamValues.get('random.username') as string;
         assertEquals(typeof value, 'string');
         assert(value.length > 1, 'string value is not empty');
-        value = ParamValues.get('random.department') as string;
+        value = await ParamValues.get('random.department') as string;
         assertEquals(typeof value, 'string');
         assert(value.length > 1, 'string value is not empty');
-        value = ParamValues.get('random.jobTitle') as string;
+        value = await ParamValues.get('random.jobTitle') as string;
         assertEquals(typeof value, 'string');
         assert(value.length > 1, 'string value is not empty');
-        value = ParamValues.get('random.phrase') as string;
+        value = await ParamValues.get('random.phrase') as string;
         assertEquals(typeof value, 'string');
         assert(value.length > 1, 'string value is not empty');
-        value = ParamValues.get('random.countryCode') as string;
+        value = await ParamValues.get('random.countryCode') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /^[\w]+$/, 'value is a country code');
-        value = ParamValues.get('random.hexColor') as string;
+        value = await ParamValues.get('random.hexColor') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /^#[0-aa-f]+$/, 'value is html color');
-        value = ParamValues.get('random.zipCode') as string;
+        value = await ParamValues.get('random.zipCode') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /^[\d-]+$/, 'value is a zip code');
-        value = ParamValues.get('random.filePath') as string;
+        value = await ParamValues.get('random.filePath') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /^[\d-_\+.\/\\\w]+$/, 'value is a valid file path');
         
-        value = ParamValues.get('random.emoji') as string;
+        value = await ParamValues.get('random.emoji') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /\p{Emoji}/u, 'value is an emoji');
         
-        value = ParamValues.get('random.ip') as string;
+        value = await ParamValues.get('random.ip') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /^[\d]+\.[\d]+\.[\d]+\.[\d]+$/, 'value is an IP');
-        value = ParamValues.get('random.uuid') as string;
+        value = await ParamValues.get('random.uuid') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /^[\w\d-]+$/, 'value is an UUID');
        
-        value = ParamValues.get('random.pastDate') as string;
+        value = await ParamValues.get('random.pastDate') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /^[\d-]+$/, 'value is an ISO Date');
         assert(new Date(value).getTime() < Date.now(), 'date is past');
 
-        value = ParamValues.get('random.futureDate') as string;
+        value = await ParamValues.get('random.futureDate') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /^[\d-]+$/, 'value is an ISO Date');
         assert(new Date(value).getTime() > (Date.now() - 24*60*60*1000), 'date is past');
         
-        value = ParamValues.get('random.datetime') as string;
+        value = await ParamValues.get('random.datetime') as string;
         assertEquals(typeof value, 'string');
         assertMatch(value, /^[\d-T:\.Z]+$/, 'value is an ISO Datetime');        
         assertFalse(isNaN(new Date(value).getTime()));
@@ -297,22 +296,22 @@ describe('Testing params values generator', () => {
  */
 
 
-    it('checks ParamValues for server.isoDatetime',  () => {
-        const value = ParamValues.get('server.isoDatetime') as string;
+    it('checks ParamValues for server.isoDatetime', async () => {
+        const value = await ParamValues.get('server.isoDatetime') as string;
 
         assertEquals(typeof value, 'string');
         assert(Math.abs(new Date(value).getTime() - Date.now()) < 50, 'generated date is now');
     });
 
-    it('checks ParamValues for server.timestamp',  () => {
-        const value = ParamValues.get('server.timestamp') as number;
+    it('checks ParamValues for server.timestamp', async () => {
+        const value = await ParamValues.get('server.timestamp') as number;
 
         assertEquals(typeof value, 'number');
         assert(Math.abs(value - Date.now()) < 50, 'generated date is now');        
     });
 
-    it('checks ParamValues for server.isoDate',  () => {
-        const value = ParamValues.get('server.isoDate') as string;
+    it('checks ParamValues for server.isoDate', async () => {
+        const value = await ParamValues.get('server.isoDate') as string;
 
         assertEquals(typeof value, 'string');
         assert(new Date().toISOString().startsWith(value));

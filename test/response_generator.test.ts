@@ -237,7 +237,7 @@ describe('Testing response generators', () => {
     });
 
 
-    it('checks error configured response', () => {
+    it('checks error configured response', async () => {
         const newConfig : MockerConfig = {
             errorResponse: {
                 success: false,
@@ -246,20 +246,20 @@ describe('Testing response generators', () => {
         }
         const req = createRequest('/api/user');
         const respGenerator : ResponseGenerator = new ResponseGenerator(newConfig, '/api');
-        let response = respGenerator.generateError(req, "Prueba", 404);
+        let response = await respGenerator.generateError(req, "Prueba", 404);
         
         assertEquals(response.payload.success, false);
         assertEquals(response.payload.error, "Prueba");
         assertEquals(response.httpStatus, 404);
 
-        response = respGenerator.generateError(req, undefined, 700);
+        response = await respGenerator.generateError(req, undefined, 700);
         assertEquals(response.payload.success, false);
         assertEquals(response.payload.error, "Error in request to path: /api/user");
         assertEquals(response.httpStatus, 500);
         
-        response = respGenerator.generateError(req, undefined, 100);
+        response = await respGenerator.generateError(req, undefined, 100);
         assertEquals(response.httpStatus, 500);
-        response = respGenerator.generateError(req);
+        response = await respGenerator.generateError(req);
         assertEquals(response.httpStatus, 500);
 
         const newConfig2 : MockerConfig = {
@@ -269,16 +269,16 @@ describe('Testing response generators', () => {
             }
         }
         const respGenerator2 : ResponseGenerator = new ResponseGenerator(newConfig2, '/api');
-        response = respGenerator2.generateError(req);
+        response = await respGenerator2.generateError(req);
         assertEquals(response.httpStatus, 418);
 
 
     });
 
-    it('checks error non configured response', () => {
+    it('checks error non configured response', async () => {
         const req = createRequest('/api/user');
         const respGenerator : ResponseGenerator = new ResponseGenerator({}, '/api');
-        const response = respGenerator.generateError(req);
+        const response = await respGenerator.generateError(req);
         assertEquals(response.httpStatus, 500);
         assertEquals(response.payload.success, false);
     });

@@ -229,10 +229,10 @@ export class ResponseGenerator {
       rvo.set(this.pathVars[uniqueVar] || await ParamValues.get(uniqueVar, request));
     } else {
       let value = rvo.pattern;
-      await rvo.vars.forEach(async (v) => {
+      for (const v of rvo.vars) {
         const genVal = '' + (this.pathVars[v] || await ParamValues.get(v, request) || '');
         value = value.replace(`\${${v}}`, genVal);
-      });
+      }
       rvo.set(value);
     }
   }
@@ -314,6 +314,7 @@ export class ResponseGenerator {
     const errorTemplateJson : string = JSON.stringify(errorTemplate);
     errorTemplate = JSON.parse(errorTemplateJson.replace(/\${error}/g, errorMessage));
     const refValues = this.findAllGeneratedValues(errorTemplate);    
+    
     for (const rv of refValues.filter(rv => rv instanceof RefValueObject)) {
       await await this.generateValueObj(request, rv as RefValueObject);
     }
