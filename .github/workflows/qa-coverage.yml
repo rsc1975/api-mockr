@@ -17,7 +17,7 @@ jobs:
         run: |
           ls ${{ github.workspace }}
           cd ${{ github.workspace }}
-      - uses: uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
       - run: deno test -A --coverage=coverage/ test/
