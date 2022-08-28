@@ -1,13 +1,5 @@
-'use strict';
-
-import * as Code from '@hapi/code';
-import * as Lab from '@hapi/lab';
-
-import { validateConfigSchema } from '../../src/model/schema_validator';
-// create sum function
-
-const { expect } = Code;
-const { it, describe, before, afterEach } = exports.lab = Lab.script();
+import { validateConfigSchema } from "../../src/model/schema_validator.ts";
+import { afterEach, assertEquals, beforeAll, describe, it } from "../test_deps.ts";
 
 const okConfig = {
   "routes": {
@@ -46,8 +38,8 @@ const badConfig2 = {
 
 describe('Testing Config model validator', () => {
 
-    before(() => {
-        process.env.NODE_ENV = 'test';
+    beforeAll(() => {
+        Deno.env.set('NODE_ENV', 'test');
     });
 
     afterEach(() => {
@@ -56,21 +48,21 @@ describe('Testing Config model validator', () => {
     
     it('checks ok config', () => {
       const r = validateConfigSchema(okConfig);
-      expect(r.valid).to.be.true();
+      assertEquals(r.valid, true);
     });
     
     it('checks default params', () => {
       const r = validateConfigSchema(badConfig);
-      expect(r.valid).to.be.false();      
-      expect(r.errors.length).to.equal(1);
-      expect(r.errors[0].argument).to.be.equal("defaultResponse2");      
+      assertEquals(r.valid, false);      
+      assertEquals(r.errors.length, 1);
+      assertEquals(r.errors[0].argument, "defaultResponse2");      
     });
     
     it('checks valid method name', () => {
       const r = validateConfigSchema(badConfig2);
-      expect(r.valid).to.be.false();      
-      expect(r.errors.length).to.equal(1);
-      expect(r.errors[0].argument).to.be.equal("wrong_method");       
+      assertEquals(r.valid, false);      
+      assertEquals(r.errors.length, 1);
+      assertEquals(r.errors[0].argument, "wrong_method");       
     });
 });
 

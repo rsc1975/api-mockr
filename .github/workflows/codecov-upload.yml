@@ -23,6 +23,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           verbose: true # optional (default = false)
-          files: "lcov.info"
+          files: "coverage.lcov"
           
       - run: echo "🍏 This job's status is ${{ job.status }}."

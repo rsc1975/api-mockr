@@ -1,14 +1,10 @@
 
-import { deepMerge, defaultResponseConfig, getConfig, MockerConfig } from '../src/routes_config';
+import { assertEquals, assertExists } from 'https://deno.land/std@0.85.0/testing/asserts.ts';
+import { AnyObj } from '../src/common/utils.ts';
+import { ResponseGenerator } from '../src/response_generator.ts';
+import { MockerConfig } from '../src/routes_config.ts';
+import { assert, beforeAll, describe, extendRequestPrototype, it } from './test_deps.ts';
 
-import Code from '@hapi/code';
-import Lab from '@hapi/lab';
-import { Request, ServerInjectOptions } from '@hapi/hapi';
-import { MockServer } from'../src/mock_server';
-import { ResponseGenerator } from'../src/response_generator';
-
-const { expect } = Code;
-const { it, describe, before } = exports.lab = Lab.script();
 
 const CONFIG : MockerConfig = {
     routes: {
@@ -73,74 +69,83 @@ const CONFIG : MockerConfig = {
 
 describe('Testing response generators', () => {
 
-    before(() => {
-        process.env.NODE_ENV = 'test';
+    beforeAll(() => {
+        Deno.env.set('NODE_ENV', 'test');
     });
 
-    async function createRequest(url: string = '/api/test', 
-                                    params: string = 'bar=baz&foo=fo0', 
-                                    method: string = 'GET') : Promise<Request> {
-        const request : ServerInjectOptions = {
-            url: `${url}?${params}`,
-            method: method,
-            headers: {
-                'X-CUSTOM-HEADER': 'Hola!'
-            },
-            app: {}
-          };
-        const server = new MockServer({apiPrefix: '/api', silent: true}).server;
-        const response = await server.inject(request);
 
-        return response.request; 
+    function createRequest(url = '/api/test', 
+                            params: Record<string, string> = {bar: 'baz', foo: 'fo0'}, 
+                            method = 'GET') : Request {
+        const searchParams = new URLSearchParams(params);
+        const body = (['POST', 'PUT'].includes(method)) ? JSON.stringify({
+            email: 'r@r.es',
+            password: 'secred',
+            firstname: 'John',
+            lastname: 'Doe'
+          }) : undefined;
+
+        const request = new Request(`http://localhost:3003${url}?${searchParams}`, {
+            method: method,
+            body: body,
+            headers: {
+                'content-type': 'application/json',
+                'X-CUSTOM-HEADER': 'Hola!'
+            }
+          });
+        extendRequestPrototype();
+        return request; 
     }
 
 
-    it('checks config pre-processor', async () => {
-        const req : Request = await createRequest();
-        const respGenerator : ResponseGenerator = new ResponseGenerator(CONFIG, '/api');
-        expect(CONFIG._rePath).to.be.an.object();
+    it('checks config pre-processor', () => {
+        //const req : Request = createRequest();
+        new ResponseGenerator(CONFIG, '/api');
+        assertExists(CONFIG._rePath);
         const totalPathRoutess = Object.keys(CONFIG.routes!['*']!).length;
-        expect(CONFIG._rePath!['*']).to.be.array().length(totalPathRoutess);
-        expect(CONFIG._rePath!['*']![0].path).to.startsWith('/')
-        expect(CONFIG._rePath!['*']![totalPathRoutess - 1].path).to.be.equal('*');
+        const rePath = CONFIG._rePath!['*'];
+        assert(Array.isArray(rePath), '_rePath["*"] is an array');
+        assertEquals(rePath.length,  totalPathRoutess);
+        assert(rePath![0].path.startsWith('/'));
+        assertEquals(rePath![totalPathRoutess - 1].path, '*');
     });
 
     it('checks response template is found', async () => {
-        const req : Request = await createRequest();
+        const req : Request = createRequest();
         const respGenerator : ResponseGenerator = new ResponseGenerator(CONFIG, '/api');
-        const response : any = respGenerator.generate(req);
+        const response = await respGenerator.generate(req) as AnyObj;
 
-        expect(response).to.be.an.object();
-        expect(response.prueba).to.be.undefined();
-        expect(response.test).to.be.true();
-        expect(response.date).to.be.string();        
+        assertExists(response);
+        assertEquals(response.prueba, undefined);
+        assertEquals(response.test, true);
+        assertEquals(typeof response.date, 'string');        
     });
 
     it('checks response template with path vars', async () => {
-        const req : Request = await createRequest('/api/user/rsanchez/34');
-        const response : any = new ResponseGenerator(CONFIG, '/api').generate(req);
-        expect(response).to.be.an.object();
-        expect(response.success).to.be.true();
-        expect(response.username).to.be.equal('rsanchez');
-        expect(+response.id).to.be.equal(34);
+        const req : Request = createRequest('/api/user/rsanchez/34');
+        const response = await new ResponseGenerator(CONFIG, '/api').generate(req) as AnyObj;
+        assertExists(response);
+        assertEquals(response.success, true);
+        assertEquals(response.username, 'rsanchez');
+        assertEquals(+(response.id as string), 34);
     });
 
 
     it('checks response as array path vars', async () => {
-        const req : Request = await createRequest('/api/cities/es');
-        const response : any = new ResponseGenerator(CONFIG, '/api').generate(req);
+        const req : Request = createRequest('/api/cities/es');
+        const response = await new ResponseGenerator(CONFIG, '/api').generate(req) as AnyObj;
 
-        expect(response).to.be.an.array();
-        expect(+response.length).to.be.lessThan(8).greaterThan(0);
-        expect(response[0].country).to.be.equal('es');
-        expect(response[0].name).to.be.string();
-        expect(+response[0].population).to.be.lessThan(10000000);        
-        expect(response[0].pois).to.be.array().length(2); // Default length is 2
-        expect(response[0].majors).to.be.array().length(2);
-        expect(response[0].squares).to.be.array();
-        expect(+response[0].squares.length).to.be.lessThan(11);
-        expect(response[0].libraries).to.be.array().length(2);
-        expect(response[0].schools).to.be.array().length(2);
+        assert(Array.isArray(response), 'response is an array');
+        assert(+response.length > 0 && +response.length < 8);
+        assertEquals(response[0].country, 'es');
+        assertEquals(typeof response[0].name, 'string');
+        assert(+response[0].population < 10000000);        
+        assertEquals(response[0].pois.length, 2); // Default length is 2
+        assertEquals(response[0].majors.length, 2);
+        assert(Array.isArray(response[0].squares));
+        assert(+response[0].squares.length < 11);
+        assertEquals(response[0].libraries.length, 2);
+        assertEquals(response[0].schools.length, 2);
     });
 
     it('checks response as fixed array', async () => {
@@ -152,12 +157,13 @@ describe('Testing response generators', () => {
                     name: '${random.personFirstName}'
                 }]            
         }
-        const req : Request = await createRequest('/api/whatever');
-        const response : any = new ResponseGenerator(newConfig, '/api').generate(req);
+        const req : Request = createRequest('/api/whatever');
+        const response = await new ResponseGenerator(newConfig, '/api').generate(req) as AnyObj;
 
-        expect(response).to.be.an.array().length(2);
-        expect(+response[0].num).to.be.number().lessThan(11);
-        expect(response[1].name).to.be.string();
+        assert(Array.isArray(response));
+        assertEquals(response.length, 2);
+        assert(+(response[0].num) < 11);
+        assertEquals(typeof response[1].name, 'string');
     });
 
     it('checks default response', async () => {
@@ -170,15 +176,16 @@ describe('Testing response generators', () => {
                 }
             }
         }
-        const req : Request = await createRequest('/api/user', 'hola=caracola');
+        const req : Request = createRequest('/api/user', {hola: 'caracola'});
         const respGenerator : ResponseGenerator = new ResponseGenerator(newConfig, '/api');
-        const response : any = respGenerator.generate(req);
-        expect(response).to.be.an.object();
-        expect(response.success).to.be.true();
-        expect(response.request).to.be.an.object();
-        expect(response.request.path).to.be.equal('/api/user');
-        expect(response.request.params).to.be.an.object();
-        expect(response.request.params.hola).to.be.equal('caracola');
+        // deno-lint-ignore no-explicit-any
+        const response  = await respGenerator.generate(req) as any;
+        assertExists(response);
+        assertEquals(response.success, true);
+        assertExists(response.request);
+        assertEquals(response.request.path, '/api/user');
+        assertEquals(typeof response.request.params, 'object');
+        assertEquals(response.request.params.hola, 'caracola');
 
         const newConfig2 : MockerConfig = {
             defaultResponse: {
@@ -191,9 +198,9 @@ describe('Testing response generators', () => {
                 }
             }
         }
-        const response2 : any = new ResponseGenerator(newConfig2, '/api').generate(req);
-        expect(response2).to.be.an.object();
-        expect(response2.success).to.be.true();
+        const response2 = await new ResponseGenerator(newConfig2, '/api').generate(req) as AnyObj;
+        assertExists(response2);
+        assertEquals(response2.success, true);
 
     });
 
@@ -208,11 +215,11 @@ describe('Testing response generators', () => {
            }
         };
 
-        const req = await createRequest('/api/whatever');
+        const req = createRequest('/api/whatever');
         const respGenerator : ResponseGenerator = new ResponseGenerator( noDefaultConfig, '/api');
-        const response : any = respGenerator.generate(req);
-        expect(response).to.be.an.object();
-        expect(response).to.be.empty();
+        const response = await respGenerator.generate(req);
+        assertExists(response);
+        assertEquals(response, {});
 
         const noDefaultConfig2 : MockerConfig = {
             routes: {
@@ -224,9 +231,9 @@ describe('Testing response generators', () => {
            }
         };
         
-        const response2 : any = new ResponseGenerator(noDefaultConfig2, '/api').generate(req);
-        expect(response2).to.be.an.object();
-        expect(response2).to.be.empty();
+        const response2 = await new ResponseGenerator(noDefaultConfig2, '/api').generate(req);
+        assertExists(response2);
+        assertEquals(response, {});
     });
 
 
@@ -237,22 +244,24 @@ describe('Testing response generators', () => {
                 error: '${error}'
             }
         }
-        const req = await createRequest('/api/user');
+        const req = createRequest('/api/user');
         const respGenerator : ResponseGenerator = new ResponseGenerator(newConfig, '/api');
-        let response : any = respGenerator.generateError(req, "Prueba", 404);
+        let response = await respGenerator.generateError(req, "Prueba", 404);
         
-        expect(response.payload.success).to.be.false();
-        expect(response.payload.error).to.be.equal("Prueba");
-        expect(response.httpStatus).to.be.equal(404);
+        assertEquals(response.payload.success, false);
+        assertEquals(response.payload.error, "Prueba");
+        assertEquals(response.httpStatus, 404);
 
-        response = respGenerator.generateError(req, undefined, 700);
-        expect(response.payload.success).to.be.false();
-        expect(response.payload.error).to.be.equal("Error in request to path: /api/user");
-        expect(response.httpStatus).to.be.equal(500);
-        response = respGenerator.generateError(req, undefined, 100);
-        expect(response.httpStatus).to.be.equal(500);
-        response = respGenerator.generateError(req);
-        expect(response.httpStatus).to.be.equal(500);
+        response = await respGenerator.generateError(req, undefined, 700);
+        assertEquals(response.payload.success, false);
+        assertEquals(response.payload.error, "Error in request to path: /api/user");
+        assertEquals(response.httpStatus, 500);
+        
+        response = await respGenerator.generateError(req, undefined, 100);
+        assertEquals(response.httpStatus, 500);
+        response = await respGenerator.generateError(req);
+        assertEquals(response.httpStatus, 500);
+
         const newConfig2 : MockerConfig = {
             errorResponse: {
                 $httpStatus$: 418,
@@ -260,30 +269,28 @@ describe('Testing response generators', () => {
             }
         }
         const respGenerator2 : ResponseGenerator = new ResponseGenerator(newConfig2, '/api');
-        response = respGenerator2.generateError(req);
-        expect(response.httpStatus).to.be.equal(418);
-
+        response = await respGenerator2.generateError(req);
+        assertEquals(response.httpStatus, 418);
 
 
     });
 
     it('checks error non configured response', async () => {
-        const req = await createRequest('/api/user');
+        const req = createRequest('/api/user');
         const respGenerator : ResponseGenerator = new ResponseGenerator({}, '/api');
-        let response : any = respGenerator.generateError(req);
-        expect(response.httpStatus).to.be.equal(500);
-        expect(response.payload.success).to.be.false();
-
+        const response = await respGenerator.generateError(req);
+        assertEquals(response.httpStatus, 500);
+        assertEquals(response.payload.success, false);
     });
 
     it('checks _clonePayload param', async () => {
-        const req : unknown = {payload: {a: 1, b: 2}, query: {_clonePayload: true}};
+        //const req : unknown = {payload: {a: 1, b: 2}, query: {_clonePayload: true}};
+        const req = createRequest('/api/user', {_clonePayload: 'true'}, 'POST');
+        const body = await req.parseBody();
         const respGenerator : ResponseGenerator = new ResponseGenerator({}, '/api');
-        let response : any = respGenerator.generate(req as Request);
-        expect(response).to.be.an.object();
-        expect(response.a).to.be.equal(1);
-        expect(response.b).to.be.equal(2);
-
+        const response = await respGenerator.generate(req) as AnyObj;
+        assertExists(response);
+        assertEquals(response, body);
     });
 
 

@@ -1,17 +1,37 @@
-import { Request } from "@hapi/hapi";
-import { randAddress, randBrand, randCompanyName, randCountry, randCountryCode, randEmail, randEmoji, randFilePath, randFirstName, randFullName, randFutureDate, randIp, randJobArea, randJobTitle, randLastName, randPastDate, randPhoneNumber, randPhrase, randPost, randSports, randUrl, randUser, randUserName, randUuid, randZipCode } from '@ngneat/falso';
+
+import { AnyObj, isEmpty, pathname } from './common/utils.ts';
+import { randAddress, randBrand, randCompanyName, randCountry, randCountryCode, randEmail, randEmoji, randFilePath, randFirstName, randFullName, randFutureDate, randIp, randJobArea, randJobTitle, randLastName, randPastDate, randPhoneNumber, randPhrase, randSports, randUrl, randUserName, randUuid, randZipCode } from './deps/falso.ts';
+
+// deno-lint-ignore no-explicit-any
+type generatorFn = (...args: any[]) => any;
+type generatorCategory = 'request' | 'random' | 'server';
+
+type generatorConfig = Record<string, generatorFn>;
 
 export class ParamValues {
-  static readonly generators: any = {
+  static readonly generators: Record<generatorCategory, generatorConfig> = {
     request: {
-      path: (req: Request) => req.url.pathname,
-      params: (req: Request, paramName?: string) => !!paramName ? req.query[paramName] : req.query,
-      payload: (req: Request, paramName?: string) => !!paramName ? (<any>req.payload || {})[paramName] : req.payload,
-      headers: (req: Request, headerName?: string) => !!headerName ? req.headers[headerName.toLowerCase()] : req.headers,
+      path: (req: Request) => pathname(req.url),
+      params: (req: Request, paramName?: string) => {
+        if (paramName) {
+          return req.query(paramName);
+        } else {
+          const params = req.query();
+          return isEmpty(params) ? undefined : params;
+        } 
+      },
+      payload: async (req: Request, paramName?: string) => {
+        const body = await req.parseBody();
+        if (body instanceof ArrayBuffer) {
+          return undefined;
+        }        
+        return paramName ? (body as AnyObj)[paramName] : body;
+      },
+      headers: (req: Request, headerName?: string) => headerName ? req.header(headerName.toLowerCase()) : req.header(),
     },
     random: {
       integer: (max: number = Number.MAX_SAFE_INTEGER) => Math.floor(Math.random() * (+max + 1)),
-      float: (max: number = 100.0) => Math.random() * (+max),
+      float: (max = 100.0) => Math.random() * (+max),
       boolean: () => Math.random() > 0.5,
       choose: (...values: string[]) => values[Math.floor(Math.random() * values.length)] || null,
       hexColor: () => `#${Math.floor(Math.random() * 16777215).toString(16)}`,
@@ -48,18 +68,19 @@ export class ParamValues {
     }
   }
 
-  public static get(paramName: string, req?: Request): Record<string, unknown> | number | string | boolean | null {
+  public static async get(paramName: string, req?: Request): Promise<AnyObj | number | string | boolean | undefined> {
     const [category, command, ...params] = paramName.split('.');
-    const generator = ParamValues.generators[category];
+    const generator = ParamValues.generators[category as generatorCategory] as AnyObj;
     if (!generator) {
-      return null;
+      return undefined;
     }
-    const commandFn = generator[command];
+    const commandFn = generator[command] as generatorFn;
     if (!commandFn) {
-      return null;
+      return undefined;
     }
 
     const commandParams = (category === 'request') ? [req, ...params] : params;
-    return commandFn(...commandParams);
+    return await commandFn(...commandParams);
   }
+
 }

@@ -1,31 +1,27 @@
 
-import { deepCopy, defaultResponseConfig, getConfig, loadConfigFile, MockerConfig, SingleResponseConfig } from '../src/routes_config';
+import { assertStringIncludes } from 'https://deno.land/std@0.85.0/testing/asserts.ts';
+import { deepCopy, defaultResponseConfig, getConfig, loadConfigFile, MockerConfig, SingleResponseConfig } from '../src/routes_config.ts';
+import { afterEach, assertEquals, assertExists, assertNotEquals, beforeAll, describe, fail, it, restore, stub, toAny } from './test_deps.ts';
 
-import Code, { fail } from '@hapi/code';
-import Lab from '@hapi/lab';
-import Sinon from 'sinon';
-import fs from 'fs';
-
-const { expect } = Code;
-const { it, describe, before, afterEach } = exports.lab = Lab.script();
 
 describe('Testing routes config', () => {
 
-    before(() => {
-        process.env.NODE_ENV = 'test';
+    beforeAll(() => {
+        Deno.env.set('NODE_ENV', 'test');
     });
 
     afterEach(() => {
-        Sinon.restore();
+        restore();
     });
 
-    function evalDefaultConfig(conf: MockerConfig) : void{
-        expect(conf).to.be.an.object();
-        expect(conf['defaultResponse']!['success']).to.be.true;
-        expect(conf['errorResponse']!['success']).to.be.false;
-        expect(conf['routes']!['get']).to.be.an.object();
-        expect(conf['routes']!['get']!['say-whatever']).to.be.an.object();
-        expect(conf['routes']!['get']!['say-whatever']['success']).to.be.true;
+    // deno-lint-ignore no-explicit-any
+    function evalDefaultConfig(conf: any) : void{
+        assertExists(conf);
+        assertEquals(conf['defaultResponse']!['success'], true);
+        assertEquals(conf['errorResponse']!['success'], false);
+        assertEquals(typeof conf['routes']!['get'], 'object');
+        assertEquals(typeof conf['routes']!['get']!['say-whatever'], 'object');
+        assertEquals(conf['routes']!['get']!['say-whatever']['success'], true);
     }
 
     it('checks default config', () => {
@@ -51,13 +47,13 @@ describe('Testing routes config', () => {
                 }
             }
         };
-        const composedConfig = getConfig(newconfig as MockerConfig);
-        expect(composedConfig.defaultResponse!['success']).to.be.true;
-        expect(composedConfig.routes!['*']!["/${id}"]).to.be.an.object();
-        expect(composedConfig.routes!['*']!["/${id}"]['success']).to.be.false;
-        expect(composedConfig.routes!['*']!["/${id}"]['data']).to.be.array;
-        expect(composedConfig.routes!['*']!['/']['success']).to.be.true;
-        expect(composedConfig.routes!['*']!['/']['data']).to.be.equal('New API');
+        const composedConfig = toAny(getConfig(newconfig as MockerConfig));
+        assertEquals(composedConfig.defaultResponse!['success'], true);
+        assertEquals(typeof composedConfig.routes!['*']!["/${id}"], 'object');
+        assertEquals(composedConfig.routes!['*']!["/${id}"]['success'], false);
+        assertEquals(Array.isArray(composedConfig.routes!['*']!["/${id}"]['data']), true);
+        assertEquals(composedConfig.routes!['*']!['/']['success'], true);
+        assertEquals(composedConfig.routes!['*']!['/']['data'], 'New API');
 
     });
 
@@ -71,63 +67,65 @@ describe('Testing routes config', () => {
         try {
             getConfig(wrongConfig as MockerConfig);
             fail('Should have thrown an error with an invalid config');
-        } catch(err: any) {
-            expect(err.message).to.contain('ERROR validating config').to.contain('routes_missing');
+        } catch(err: unknown) {
+            assertStringIncludes(toAny(err).message, 'ERROR validating config')
+            assertStringIncludes(toAny(err).message, 'routes_missing');
         }
         
     });
 
     it('checks deepCopy', () => {
-        const obj = {
+        const data = {
             foo: 123,
             bar: {
                 internal: 'Hi'
             }
         };
-        const objCopy = deepCopy(obj) as Record<string, any>;
-        expect(objCopy).to.be.an.object();
-        expect(objCopy.foo).to.be.equal(123);
-        expect(objCopy.bar.internal).to.be.equal('Hi');
+        const objCopy = toAny(deepCopy(data));
+        assertEquals(typeof objCopy, 'object');
+        assertEquals(objCopy.foo, 123);
+        assertEquals(objCopy.bar.internal, 'Hi');
         objCopy.bar.internal = 'Bye';
-        expect(obj.bar.internal).to.be.equal('Hi');
+        assertNotEquals(data.bar.internal, 'Bye');
     });
 
     it('checks deepCopy on null or undefined', () => {
         const obj = undefined;
         const objCopy = deepCopy(obj!);
-        expect(objCopy).to.be.an.object();
-        expect(objCopy).to.be.empty();
+        assertEquals(typeof objCopy, 'object');
+        assertEquals(objCopy, {});
     });
 
     it('checks loadConfigFile JSON file', () => {
-        
-        Sinon.stub(fs, 'existsSync').withArgs('fichero3.json').returns(true);
-
-        Sinon.stub(fs, 'readFileSync')
-            .withArgs('fichero3.json', 'utf8').returns('{ "defaultResponse": { "result": true} }');
+        stub(Deno, 'readFileSync', () => {
+            return new TextEncoder().encode('{ "defaultResponse": { "result": true} }');
+        });            
         
         const conf = loadConfigFile('fichero3.json');
-        expect(conf).to.be.an.object();
-        expect(conf.defaultResponse).to.be.an.object();
-        expect((<SingleResponseConfig>conf.defaultResponse)!.result).to.be.true();
-        
+        assertExists(conf);
+        assertEquals(typeof conf.defaultResponse, 'object');
+        assertEquals((<SingleResponseConfig>conf.defaultResponse)!.result, true);
     });
 
     it('checks loadConfigFile YAML file', () => {
-        
-        Sinon.stub(fs, 'existsSync').withArgs('fichero1.yml').returns(true)
-        .withArgs('fichero2.yaml').returns(true);
 
-        Sinon.stub(fs, 'readFileSync').returns("defaultResponse:\n    success: true\n");
+        stub(Deno, 'readFileSync', (f: string | URL) => {
+            if (f === 'fichero1.yml') {
+                return new TextEncoder().encode('defaultResponse:\n    result: true\n');
+            } else {
+                return new TextEncoder().encode('defaultResponse:\n    success: true\n');
+            }
+        });            
         
         let conf = loadConfigFile('fichero1.yml');
-        expect(conf).to.be.an.object();
-        expect(conf.defaultResponse).to.be.an.object();
-        expect((<SingleResponseConfig>conf.defaultResponse)!.success).to.be.true();
+        assertExists(conf);
+        assertEquals(typeof conf.defaultResponse, 'object');
+        assertEquals((<SingleResponseConfig>conf.defaultResponse)!.result, true);
         conf = loadConfigFile('fichero2.yaml');
-        expect(conf).to.be.an.object();
-        expect(conf.defaultResponse).to.be.an.object();
-        expect((<SingleResponseConfig>conf.defaultResponse)!.success).to.be.true();
+        assertExists(conf);
+        assertEquals(typeof conf.defaultResponse, 'object');
+        assertEquals((<SingleResponseConfig>conf.defaultResponse)!.success, true);
+        assertEquals((<SingleResponseConfig>conf.defaultResponse)!.result, undefined);
         
     });
 

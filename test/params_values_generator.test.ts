@@ -1,250 +1,286 @@
 
-import { defaultResponseConfig, getConfig, MockerConfig } from '../src/routes_config';
-
-import Code from '@hapi/code';
-import Lab from '@hapi/lab';
-import { Request, ServerInjectOptions } from '@hapi/hapi';
-import { MockServer } from '../src/mock_server';
-import { ParamValues } from "../src/param_values_generator";
-
-const { expect } = Code;
-const { it, describe, before } = exports.lab = Lab.script();
+import { AnyObj, pathname } from '../src/common/utils.ts';
+import { ParamValues } from '../src/param_values_generator.ts';
+import { assert, assertArrayIncludes, assertEquals, assertExists, assertFalse, assertMatch, assertNotEquals, assertStrictEquals, beforeAll, describe, extendRequestPrototype, it } from './test_deps.ts';
 
 //const emailRegExp = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/
 const emailRegExp = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
 describe('Testing params values generator', () => {
-
-    before(() => {
-        process.env.NODE_ENV = 'test';
+    
+    beforeAll(() => {
+        Deno.env.set('NODE_ENV', 'test');
     });
 
-    async function createRequest() : Promise<Request> {
-        const request : ServerInjectOptions = {
-            url: '/api/test?bar=baz&foo=fo0',
+    function createRequest() : Request {
+        const params = new URLSearchParams({
+            bar: 'baz',
+            foo: 'fo0'
+        });
+        const request = new Request(`http://localhost:3003/api/test?${params}`, {
             method: 'POST',
-            payload: {
+            body: JSON.stringify({
               email: 'r@r.es',
               password: 'secred',
               firstname: 'John',
               lastname: 'Doe'
-            },
+            }),
             headers: {
+                'content-type': 'application/json',
                 'X-CUSTOM-HEADER': 'Hola!'
-            },
-            app: {}
-          };
-        const server = new MockServer({apiPrefix: '/api', silent: true}).server;
-        const response = await server.inject(request);
-
-        return response.request; 
+            }
+          });
+        extendRequestPrototype();
+        return request; 
     }
 
     it('checks ParamValues for unknown', async () => {
-        
-        expect(ParamValues.get('nothing_to_do')).to.be.null();
-        expect(ParamValues.get('request.whatever')).to.be.null();
-        expect(ParamValues.get('random.whatever')).to.be.null();
+        assertEquals(await ParamValues.get('nothing_to_do'), undefined);
+        assertEquals(await ParamValues.get('request.whatever'), undefined);
+        assertEquals(await ParamValues.get('random.whatever'), undefined);
     });
 
     it('checks ParamValues for request.path', async () => {
-        const req = await createRequest();
-        const value = ParamValues.get('request.path', req);
+        const req = createRequest();
+        const value = await ParamValues.get('request.path', req);
 
-        expect(value).to.equal(req.url.pathname).to.equal('/api/test');
+        assertEquals(value, pathname(req.url));
+        assertEquals(value, '/api/test');
     });
 
     it('checks ParamValues for request.params', async () => {
-        const req = await createRequest();
-        const value = ParamValues.get('request.params', req);
+        const req = createRequest();
+        const value = await ParamValues.get('request.params', req);
 
-        expect(value).to.be.equal(req.query);
-        expect((value as Record<string, unknown>)!.bar).to.be.equal(req.query.bar).to.be.equal('baz');
+        assertEquals(value, req.query());
+        assertEquals((value as AnyObj).bar, 'baz');
+        assertEquals((value as AnyObj).bar, req.query('bar'));
+
     });
 
     it('checks ParamValues for request.params.bar', async () => {
-        const req = await createRequest();
-        const value = ParamValues.get('request.params.bar', req);
+        const req = createRequest();
+        const value = await ParamValues.get('request.params.bar', req);
 
-        expect(value).to.be.equal(req.query.bar).to.be.equal('baz');
+        assertEquals(value, 'baz');
+        assertEquals(value, req.query('bar'));        
+
     });
 
 
     it('checks ParamValues for request.payload', async () => {
-        const req = await createRequest();
-        const value = ParamValues.get('request.payload', req) as object;
+        const req = createRequest();
+        const value = await ParamValues.get('request.payload', req);
+        assertExists(value);
+        assertArrayIncludes<string>(Object.keys(value), ['email', 'firstname', 'lastname', 'password']);
         
-        expect(value).to.be.object();
-        expect(value).to.be.equal(req.payload as object);
-        expect(Object.keys(value)).to.contains('email').to.contains('firstname');
     });
 
     it('checks ParamValues for request.payload.email', async () => {
-        const req = await createRequest();
-        const value = ParamValues.get('request.payload.email', req);
+        const req = createRequest();
+        const value = await ParamValues.get('request.payload.email', req);
 
-        expect(value).to.be.string();
-        expect(value).to.be.equal((req.payload as any).email).to.be.equal('r@r.es');
+        assertStrictEquals(typeof value, 'string');
+        const body = await req.parsedBody as AnyObj;
+         
+        assertEquals(value, body.email);
+        assertEquals(value, 'r@r.es');
 
+        const value2 = await ParamValues.get('request.payload.email_missing', req);
+        assertEquals(value2, undefined);
         
-        const value2 = ParamValues.get('request.payload.email', {payload: null} as any);
-        expect(value2).to.be.undefined();
+        const req2 = new Request('http://localhost:3003/api/');
+        console.log(await req2.parseBody());
+        const value3 = await ParamValues.get('request.payload.whatever', req2);
+
+        assertEquals(value3, undefined);
+        
     });
 
     it('checks ParamValues for request.headers', async () => {
-        const req = await createRequest();
-        const value = ParamValues.get('request.headers', req) as object;
+        const req = createRequest();
+        const value = await ParamValues.get('request.headers', req) as AnyObj;
 
-        expect(value).to.be.object();
-        expect(value).to.be.equal(req.headers as object);        
+        assertExists(value);
+        assertEquals(value, req.header());
     });
 
     it('checks ParamValues for request.headers.custom', async () => {
-        const req = await createRequest();
-        const value = ParamValues.get('request.headers.X-CUSTOM-HEADER', req);
+        const req = createRequest();
+        const value = await ParamValues.get('request.headers.X-CUSTOM-HEADER', req);
 
-        expect(value).to.be.string();
-        expect(value).to.be.equal(req.headers['X-CUSTOM-HEADER'.toLowerCase()]).to.be.equal('Hola!');
+        assertExists(value);
+        assertEquals(value, req.headers.get('X-CUSTOM-HEADER'));
+        assertEquals(value, 'Hola!');
     });
 
 
-    // RANDOM VALUES
+//     // RANDOM VALUES
 
     it('checks ParamValues for random.integer', async () => {
-        const value = ParamValues.get('random.integer') as number;
+        const value = await ParamValues.get('random.integer') as number;
 
-        expect(value).to.be.number();
-        expect(value).to.be.greaterThan(-1);
-        expect(value % 1).to.be.equal(0);
+        assertEquals(typeof value, 'number');
+        assert(value > -1, 'value is greater than -1');
+        assertEquals(value % 1, 0, 'value is an integer');
     });
 
     it('checks ParamValues for random.integer.10', async () => {
-        const value = ParamValues.get('random.integer.10') as number;
+        const value = await ParamValues.get('random.integer.10') as number;
 
-        expect(value).to.be.number();
-        expect(value).to.be.greaterThan(-1).to.be.lessThan(11);
+        assertEquals(typeof value, 'number');
+        assert(value >= 0 && value <= 10, 'value is between 0 and 10');
     });
 
     it('checks ParamValues for random.float', async () => {
-        const value = ParamValues.get('random.float') as number;
+        const value = await ParamValues.get('random.float') as number;
 
-        expect(value).to.be.number();
-        expect(value).to.be.greaterThan(0).to.be.lessThan(100);
-        expect(value % 1).not.to.be.equal(0); // this is actually not probable
+        assertEquals(typeof value, 'number');
+        assert(value >= 0 && value <= 100, 'value is between 0 and 100');
+        assertNotEquals(value % 1, 0, 'value is not integer'); // this is actually not probable
     });
 
     it('checks ParamValues for random.float.1', async () => {
-        const value = ParamValues.get('random.float.1') as number;
+        const value = await ParamValues.get('random.float.1') as number;
 
-        expect(value).to.be.number();
-        expect(value).to.be.greaterThan(0).to.be.lessThan(1);
+        assertEquals(typeof value, 'number');
+        assert(value >= 0 && value <= 1, 'value is between 0 and 1');
+
     });
 
     it('checks ParamValues for random.boolean', async () => {
-        const value = ParamValues.get('random.boolean') as boolean;
+        const value = await ParamValues.get('random.boolean') as boolean;
 
-        expect(value).to.be.boolean();
+        assertEquals(typeof value, 'boolean');
     });
 
-
     it('checks ParamValues for random.choose.foo.bar.hi', async () => {
-        const value = ParamValues.get('random.choose.foo.bar.hi') as string;
+        const value = await ParamValues.get('random.choose.foo.bar.hi') as string;
 
-        expect(value).to.be.string();
-        expect('foo.bar.hi'.split('.')).to.contains(value);
+        assertEquals(typeof value, 'string');
+        assertArrayIncludes('foo.bar.hi'.split('.'), [value]);
     });
 
     it('checks ParamValues for random.choose null', async () => {
-        const value = ParamValues.get('random.choose') as string;
+        const value = await ParamValues.get('random.choose') as string;
 
-        expect(value).to.be.null();
+        assert(value == null, 'value is null');
     });
 
     it('checks ParamValues for random.email', async () => {
-        const value = ParamValues.get('random.email') as string;
-        expect(value).to.match(emailRegExp);
+        const value = await ParamValues.get('random.email') as string;
+        assertMatch(value, emailRegExp);
     });
 
     it('checks ParamValues for random.email.dvlpr.tech', async () => {
-        const value = ParamValues.get('random.email.dvlpr.tech') as string;
+        const value = await ParamValues.get('random.email.dvlpr.tech') as string;
 
-        expect(value).to.match(emailRegExp);
-        expect(value).to.endsWith('@dvlpr.tech');
+        assertMatch(value, emailRegExp);
+        assertMatch(value, /@dvlpr.tech$/);
     });
 
-
     it('checks ParamValues for random.personFullName', async () => {
-        const value = ParamValues.get('random.personFullName') as string;
+        const value = await ParamValues.get('random.personFullName') as string;
 
-        expect(value).to.be.string();
-        expect(value.split(' ').length).to.be.greaterThan(1);
+        assertEquals(typeof value, 'string');
+        assert(value.split(' ').length > 1, 'value has at least two words');
 
-        const valueFemale = ParamValues.get('random.personFullName.female') as string;
+        const valueFemale = await ParamValues.get('random.personFullName.female') as string;
 
-        expect(valueFemale).to.be.string();
-        expect(valueFemale.split(' ').length).to.be.greaterThan(1);
+        assertEquals(typeof valueFemale, 'string');
+        assert(valueFemale.split(' ').length > 1, 'value has at least two words');
         
     });
 
     it('checks ParamValues for random.personFirstName', async () => {
-        const value = ParamValues.get('random.personFirstName') as string;
+        const value = await ParamValues.get('random.personFirstName') as string;
 
-        expect(value).to.be.string();
-        expect(value.split(' ').length).to.be.equals(1);
+        assertEquals(typeof value, 'string');
+        assert(value.split(' ').length === 1, 'value has only one word');
 
-        const valueMale = ParamValues.get('random.personFirstName.male') as string;
+        const valueMale = await ParamValues.get('random.personFirstName.male') as string;
 
-        expect(valueMale).to.be.string();
-        expect(valueMale.split(' ').length).to.be.equals(1);        
+        assertEquals(typeof valueMale, 'string');
+        
+        assert(valueMale.split(' ').length === 1, 'value has only one word');
     });
+
     it('checks ParamValues for random params', async () => {
-        let value = ParamValues.get('random.url') as string;
-        expect(value).to.startsWith('http');
+        let value = await ParamValues.get('random.url') as string;
+        assert(value.startsWith('http'));
 
-        value = ParamValues.get('random.city') as string;
-        expect(value).to.be.string().not.to.be.empty();
-        value = ParamValues.get('random.phone') as string;
-        expect(value).to.be.string().not.to.be.empty();
-        value = ParamValues.get('random.country') as string;
-        expect(value).to.be.string().not.to.be.empty();
-        value = ParamValues.get('random.sport') as string;
-        expect(value).to.be.string().not.to.be.empty();
-        value = ParamValues.get('random.brand') as string;
-        expect(value).to.be.string().not.to.be.empty();
-        value = ParamValues.get('random.company') as string;
-        expect(value).to.be.string().not.to.be.empty();
-        value = ParamValues.get('random.username') as string;
-        expect(value).to.be.string().not.to.be.empty();
-        value = ParamValues.get('random.department') as string;
-        expect(value).to.be.string().not.to.be.empty();
-        value = ParamValues.get('random.jobTitle') as string;
-        expect(value).to.be.string().not.to.be.empty();
-        value = ParamValues.get('random.phrase') as string;
-        expect(value).to.be.string().not.to.be.empty();
-        value = ParamValues.get('random.countryCode') as string;
-        expect(value).to.be.string().match(/^[\w]+$/);
-        value = ParamValues.get('random.zipCode') as string;
-        expect(value).to.be.string().match(/^[\d-]+$/)
-        value = ParamValues.get('random.filePath') as string;
-        expect(value).to.be.string().match(/^[\d-_\+.\/\\\w]+$/)
-        value = ParamValues.get('random.emoji') as string;
-        expect(value).to.be.string().match(/\p{Emoji}/u)
-        value = ParamValues.get('random.ip') as string;
-        expect(value).to.be.string().match(/^[\d]+\.[\d]+\.[\d]+\.[\d]+$/)
-        value = ParamValues.get('random.uuid') as string;
-        expect(value).to.be.string().match(/^[\w\d-]+$/)
+        value = await ParamValues.get('random.city') as string;
+        assertEquals(typeof value, 'string');
+        assert(value.length > 1, 'string value is not empty');
+        value = await ParamValues.get('random.personLastName') as string;
+        assertEquals(typeof value, 'string');
+        assert(value.length > 1, 'string value is not empty');        
+        value = await ParamValues.get('random.phone') as string;
+        assertEquals(typeof value, 'string');
+        
+        assert(value.length > 1, 'string value is not empty');
+        value = await ParamValues.get('random.country') as string;
+        assertEquals(typeof value, 'string');
+        assert(value.length > 1, 'string value is not empty');
+        value = await ParamValues.get('random.sport') as string;
+        assertEquals(typeof value, 'string');
+        assert(value.length > 1, 'string value is not empty');
+        value = await ParamValues.get('random.brand') as string;
+        assertEquals(typeof value, 'string');
+        assert(value.length > 1, 'string value is not empty');
+        value = await ParamValues.get('random.company') as string;
+        assertEquals(typeof value, 'string');
+        assert(value.length > 1, 'string value is not empty');
+        value = await ParamValues.get('random.username') as string;
+        assertEquals(typeof value, 'string');
+        assert(value.length > 1, 'string value is not empty');
+        value = await ParamValues.get('random.department') as string;
+        assertEquals(typeof value, 'string');
+        assert(value.length > 1, 'string value is not empty');
+        value = await ParamValues.get('random.jobTitle') as string;
+        assertEquals(typeof value, 'string');
+        assert(value.length > 1, 'string value is not empty');
+        value = await ParamValues.get('random.phrase') as string;
+        assertEquals(typeof value, 'string');
+        assert(value.length > 1, 'string value is not empty');
+        value = await ParamValues.get('random.countryCode') as string;
+        assertEquals(typeof value, 'string');
+        assertMatch(value, /^[\w]+$/, 'value is a country code');
+        value = await ParamValues.get('random.hexColor') as string;
+        assertEquals(typeof value, 'string');
+        assertMatch(value, /^#[0-aa-f]+$/, 'value is html color');
+        value = await ParamValues.get('random.zipCode') as string;
+        assertEquals(typeof value, 'string');
+        assertMatch(value, /^[\d-]+$/, 'value is a zip code');
+        value = await ParamValues.get('random.filePath') as string;
+        assertEquals(typeof value, 'string');
+        assertMatch(value, /^[\d-_\+.\/\\\w]+$/, 'value is a valid file path');
+        
+        value = await ParamValues.get('random.emoji') as string;
+        assertEquals(typeof value, 'string');
+        assertMatch(value, /\p{Emoji}/u, 'value is an emoji');
+        
+        value = await ParamValues.get('random.ip') as string;
+        assertEquals(typeof value, 'string');
+        assertMatch(value, /^[\d]+\.[\d]+\.[\d]+\.[\d]+$/, 'value is an IP');
+        value = await ParamValues.get('random.uuid') as string;
+        assertEquals(typeof value, 'string');
+        assertMatch(value, /^[\w\d-]+$/, 'value is an UUID');
        
-        value = ParamValues.get('random.pastDate') as string;
-        expect(value).to.be.string().match(/^[\d-]+$/);
-        expect(new Date(value).getTime()).to.be.lessThan(new Date().getTime());
+        value = await ParamValues.get('random.pastDate') as string;
+        assertEquals(typeof value, 'string');
+        assertMatch(value, /^[\d-]+$/, 'value is an ISO Date');
+        assert(new Date(value).getTime() < Date.now(), 'date is past');
 
-        value = ParamValues.get('random.futureDate') as string;
-        expect(value).to.be.string().match(/^[\d-]+$/);
-        expect(new Date(value).getTime()).to.be.greaterThan(new Date().getTime() - 24*60*60*1000);
-
-        value = ParamValues.get('random.datetime') as string;
-        expect(value).to.be.string().match(/^[\d-T:\.Z]+$/);
-        expect(isNaN(new Date(value).getTime())).to.be.false();
+        value = await ParamValues.get('random.futureDate') as string;
+        assertEquals(typeof value, 'string');
+        assertMatch(value, /^[\d-]+$/, 'value is an ISO Date');
+        assert(new Date(value).getTime() > (Date.now() - 24*60*60*1000), 'date is past');
+        
+        value = await ParamValues.get('random.datetime') as string;
+        assertEquals(typeof value, 'string');
+        assertMatch(value, /^[\d-T:\.Z]+$/, 'value is an ISO Datetime');        
+        assertFalse(isNaN(new Date(value).getTime()));
 
     });
 
@@ -260,36 +296,25 @@ describe('Testing params values generator', () => {
  */
 
 
-
     it('checks ParamValues for server.isoDatetime', async () => {
-        const value = ParamValues.get('server.isoDatetime') as string;
+        const value = await ParamValues.get('server.isoDatetime') as string;
 
-        expect(value).to.be.string();
-        expect(new Date(value).getTime()).to.be.about(new Date().getTime(), 50);
+        assertEquals(typeof value, 'string');
+        assert(Math.abs(new Date(value).getTime() - Date.now()) < 50, 'generated date is now');
     });
 
-
-
-
     it('checks ParamValues for server.timestamp', async () => {
-        const value = ParamValues.get('server.timestamp') as number;
+        const value = await ParamValues.get('server.timestamp') as number;
 
-        expect(value).to.be.number();
-        expect(value).to.be.about(new Date().getTime(), 50);
+        assertEquals(typeof value, 'number');
+        assert(Math.abs(value - Date.now()) < 50, 'generated date is now');        
     });
 
     it('checks ParamValues for server.isoDate', async () => {
-        const value = ParamValues.get('server.isoDate') as string;
+        const value = await ParamValues.get('server.isoDate') as string;
 
-        expect(value).to.be.string();
-        expect(new Date().toISOString()).to.startsWith(value);
-    });
-
-    it('checks ParamValues for server.isoDatetime', async () => {
-        const value = ParamValues.get('server.isoDatetime') as string;
-
-        expect(value).to.be.string();
-        expect(new Date(value).getTime()).to.be.about(new Date().getTime(), 50);
+        assertEquals(typeof value, 'string');
+        assert(new Date().toISOString().startsWith(value));
     });
 
 

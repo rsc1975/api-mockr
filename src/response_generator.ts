@@ -1,25 +1,28 @@
-import { Request } from "@hapi/hapi";
-import { ParamValues } from "./param_values_generator";
+// deno-lint-ignore-file no-explicit-any
+import { pathname } from "./common/utils.ts";
+import { StatusCode } from "./deps/hono.ts";
+import { ParamValues } from "./param_values_generator.ts";
 
-import { MockerConfig, HttpMethod, deepCopy, AllPathMatchers, PathMatcher, SingleResponseConfig, HttpMethodRoutesConfig } from './routes_config';
+import { MockerConfig, HttpMethod, deepCopy, AllPathMatchers, PathMatcher, SingleResponseConfig, HttpMethodRoutesConfig } from './routes_config.ts';
+
+type AnyObj = Record<string, unknown>;
 
 /**
  * Error response
  */
 type ErrorResponse = {
-  payload: object;
-  httpStatus: number;
+  payload: AnyObj;
+  httpStatus: StatusCode;
 }
-
 
 /**
  * Reference to one variable in config routes to be generated
  */
 class RefValue {
-  readonly obj: any;
+  readonly obj: AnyObj;
   readonly key: string;
 
-  constructor(obj: object, key: string) {
+  constructor(obj: AnyObj, key: string) {
     this.obj = obj;
     this.key = key;
   }
@@ -42,7 +45,7 @@ class RefValueObject extends RefValue {
   readonly pattern: string;
   readonly direct: boolean;
 
-  constructor(obj: object, key: string) {
+  constructor(obj: AnyObj, key: string) {
     super(obj, key);
     this.pattern = this.get().trim();
     this.vars = this.pattern.match(ALL_PATH_VARIABLE_EXP)!.map(v => v.replace(/[\$\{\}]/g, ''));
@@ -55,25 +58,31 @@ class RefValueObject extends RefValue {
  */
 class RefValueArray extends RefValue {
   static readonly DEFAULT_LENGHT: number = 2;
-  readonly length: number;
+  private _length?: number;
+  public async length() : Promise<number> {
+    if (this._length === undefined) {
+      const currentArray = this.get() as Array<any>;
+      if (currentArray.length === 1) {
+        const lengthExp = currentArray[0]['$length$'] || RefValueArray.DEFAULT_LENGHT;
+        if (PATH_VARIABLE_EXP.test(lengthExp)) {
+          const expValue = await ParamValues.get(lengthExp.replace(/[\$\{\} ]/g, ''));        
+          this._length = Math.max(+(expValue || RefValueArray.DEFAULT_LENGHT), 1);
+        } else {
+          this._length = Math.max(+lengthExp || RefValueArray.DEFAULT_LENGHT, 1);
+        }
+        delete currentArray[0]['$length$'];
+      } else {
+        this._length = currentArray.length;
+      }
+    }
+    return this._length;
+  }
   readonly internalRefs: RefValue[];
 
-  constructor(obj: object, key: string, internalRefs: RefValue[] = []) {
+  constructor(obj: AnyObj, key: string, internalRefs: RefValue[] = []) {
     super(obj, key);
     this.internalRefs = internalRefs;
-    const currentArray = this.get() as Array<any>;
-    if (currentArray.length === 1) {
-      const lengthExp = currentArray[0]['$length$'] || RefValueArray.DEFAULT_LENGHT;
-      if (PATH_VARIABLE_EXP.test(lengthExp)) {
-        const expValue = ParamValues.get(lengthExp.replace(/[\$\{\} ]/g, ''));        
-        this.length = Math.max(+(expValue || RefValueArray.DEFAULT_LENGHT), 1);
-      } else {
-        this.length = Math.max(+lengthExp || RefValueArray.DEFAULT_LENGHT, 1);
-      }
-      delete currentArray[0]['$length$'];
-    } else {
-      this.length = currentArray.length;
-    }
+    
   }
 
 }
@@ -154,19 +163,19 @@ export class ResponseGenerator {
     }
   }
 
-  private findMatchPath(request: Request): SingleResponseConfig {
-    if (request.query._clonePayload) {
-      return request.payload as SingleResponseConfig;
+  private async findMatchPath(request: Request): Promise<SingleResponseConfig> {
+    if (request.query('_clonePayload')) {
+      return await request.parseBody() as SingleResponseConfig;
     }
     let methodRouteConfig: HttpMethodRoutesConfig | undefined;
     const method = request.method.toLowerCase() as HttpMethod;
-    if (!!this.config.routes) {
+    if (this.config.routes) {
       methodRouteConfig = this.config.routes![method] || this.config.routes!['*'];
     }
     if (!methodRouteConfig) {
       return this.config.defaultResponse || {};
     }
-    const path = request.url.pathname.substring(this.apiPrefix.length);
+    const path = pathname(request.url).substring(this.apiPrefix.length);
 
     const pathMatchers: PathMatcher[] = this.config._rePath![method] || this.config._rePath!['*']!;
     const matchedPath = pathMatchers.find(m => m.re?.test(path) || m.path === path || m.path === '*');
@@ -175,7 +184,7 @@ export class ResponseGenerator {
       return this.config.defaultResponse || {};
     } else {
       this.matchedPath = matchedPath.path;
-      this.pathVars = matchedPath.re?.exec(path)!.slice(1).reduce((acc, v, i) => {
+      this.pathVars = matchedPath.re?.exec(path)!.slice(1).reduce((acc: Record<string, string>, v: string, i: number) => {
         acc[matchedPath.vars![i]] = v;
         return acc;
       }, {} as Record<string, string>) || {};
@@ -184,7 +193,7 @@ export class ResponseGenerator {
     }
   }
 
-  private findGeneratedValue(obj: object, key: string, value: any): RefValue[] {
+  private findGeneratedValue(obj: AnyObj, key: string, value: any): RefValue[] {
     if (typeof value === 'object') {
       return [...this.findAllGeneratedValues(value)];
     } else if ((typeof value === 'string') && PATH_VARIABLE_EXP.test(value)) {      
@@ -214,47 +223,47 @@ export class ResponseGenerator {
     return values;
   }
 
-  private generateValueObj(request: Request, rvo: RefValueObject): any {
+  private async generateValueObj(request: Request, rvo: RefValueObject): Promise<any> {
     if (rvo.direct) {
       const uniqueVar = rvo.vars[0];
-      rvo.set(this.pathVars[uniqueVar] || ParamValues.get(uniqueVar, request));
+      rvo.set(this.pathVars[uniqueVar] || await ParamValues.get(uniqueVar, request));
     } else {
       let value = rvo.pattern;
-      rvo.vars.forEach((v) => {
-        const genVal = '' + (this.pathVars[v] || ParamValues.get(v, request) || '');
+      for (const v of rvo.vars) {
+        const genVal = '' + (this.pathVars[v] || await ParamValues.get(v, request) || '');
         value = value.replace(`\${${v}}`, genVal);
-      });
+      }
       rvo.set(value);
     }
   }
 
 
-  private generateValueArray(request: Request, rva: RefValueArray): void {
+  private async generateValueArray(request: Request, rva: RefValueArray): Promise<void> {
     const currentArray = rva.get() as Array<any>;
 
-    const setRefValues = (refs: RefValue[]) => {
-      for (let ref of refs.filter(ref => ref instanceof RefValueObject)) {
-        this.generateValueObj(request, ref as RefValueObject);
+    const setRefValues = async (refs: RefValue[]) => {
+      for (const ref of refs.filter(ref => ref instanceof RefValueObject)) {
+        await this.generateValueObj(request, ref as RefValueObject);
       }
-      for (let ref of refs.filter(ref => ref instanceof RefValueArray)) {
-        this.generateValueArray(request, ref as RefValueArray);
+      for (const ref of refs.filter(ref => ref instanceof RefValueArray)) {
+        await this.generateValueArray(request, ref as RefValueArray);
       }
     }
 
     if (currentArray.length > 1) {
-      setRefValues(rva.internalRefs);
+      await setRefValues(rva.internalRefs);
     } else {
       const arrayValues = [];
-      for (let i = 0; i < rva.length; i++) {
+      for (let i = 0; i < await rva.length(); i++) {
         if (typeof currentArray[0] === 'object') {
           const rawObj = deepCopy(currentArray[0]);
           const arrayInternalRefs: RefValue[] = this.findAllGeneratedValues(rawObj);
-          setRefValues(arrayInternalRefs);
+          await setRefValues(arrayInternalRefs);
           arrayValues.push(rawObj);
         } else {
           if (PATH_VARIABLE_EXP.test(currentArray[0])) {
             const aux = { value: currentArray[0] };
-            setRefValues([new RefValueObject(aux, 'value')]);
+            await setRefValues([new RefValueObject(aux, 'value')]);
             arrayValues.push(aux.value);
           } else {
             arrayValues.push(currentArray[0]);
@@ -272,8 +281,8 @@ export class ResponseGenerator {
    * 
    * @returns {any} An object or array with the generated response
    */
-  public generate(request: Request): object | any[] {
-    const responseTemplate = deepCopy(this.findMatchPath(request));
+  public async generate(request: Request): Promise<AnyObj | any[]> {
+    const responseTemplate = deepCopy(await this.findMatchPath(request));
     if (Array.isArray(responseTemplate)) {
       let refValues : RefValue[] = [];
       if (responseTemplate.length > 1) {
@@ -281,18 +290,22 @@ export class ResponseGenerator {
       }
       const aux = { value: responseTemplate };
       const refMainArray = new RefValueArray(aux, 'value', refValues);
-      this.generateValueArray(request, refMainArray);
+      await this.generateValueArray(request, refMainArray);
       return aux.value;
     } else {
       const refValues = this.findAllGeneratedValues(responseTemplate);
-      refValues.filter(rv => rv instanceof RefValueObject).forEach(rv => this.generateValueObj(request, rv as RefValueObject));
-      refValues.filter(rv => rv instanceof RefValueArray).forEach(rv => this.generateValueArray(request, rv as RefValueArray));
+      for (const rv of refValues.filter(rv => rv instanceof RefValueObject)) {
+        await await this.generateValueObj(request, rv as RefValueObject);
+      }
+      for (const rv of refValues.filter(rv => rv instanceof RefValueArray)) {
+        await await this.generateValueArray(request, rv as RefValueArray);
+      }      
+      
       return responseTemplate;
     }
-
   }
 
-  public generateError(request: Request, errorMessage?: string, httpStatus?: number): ErrorResponse {
+  public async generateError(request: Request, errorMessage?: string, httpStatus?: number): Promise<ErrorResponse> {
     if (!errorMessage) {
       errorMessage = "Error in request to path: ${request.path}"
     }
@@ -301,14 +314,17 @@ export class ResponseGenerator {
     const errorTemplateJson : string = JSON.stringify(errorTemplate);
     errorTemplate = JSON.parse(errorTemplateJson.replace(/\${error}/g, errorMessage));
     const refValues = this.findAllGeneratedValues(errorTemplate);    
-    refValues.filter(rv => rv instanceof RefValueObject).forEach(rv  => this.generateValueObj(request, rv as RefValueObject));
+    
+    for (const rv of refValues.filter(rv => rv instanceof RefValueObject)) {
+      await await this.generateValueObj(request, rv as RefValueObject);
+    }
     
     httpStatus = httpStatus || +(<any>errorTemplate).$httpStatus$ || 500;
     if (httpStatus! < 200 || httpStatus! >= 600) {
       httpStatus = 500;
     }
     delete errorTemplate.$httpStatus$;
-    return {payload: errorTemplate, httpStatus: httpStatus!} ;
+    return {payload: errorTemplate, httpStatus: httpStatus as StatusCode} ;
   }
 }
 

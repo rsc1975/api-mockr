@@ -1,7 +1,8 @@
-import commandLineArgs, {OptionDefinition} from 'command-line-args';
-import { existsSync } from 'fs';
-import { exit } from 'process';
-import { deepMerge, getConfig, loadConfigFile, MockerConfig } from './routes_config';
+//import commandLineArgs, {OptionDefinition} from 'command-line-args';
+import { parse } from './deps/deno.ts';
+
+
+import { getConfig, loadConfigFile, MockerConfig } from './routes_config.ts';
 
 interface ToolOptions {
   apiPrefix: string;
@@ -13,29 +14,39 @@ interface ToolOptions {
   host: string;
 }
 
-const optionDefinitions : OptionDefinition[] = [
-    { name: 'silent', alias: 's', type: Boolean, defaultValue: false },
-    { name: 'verbose', alias: 'v', type: Boolean, defaultValue: false },
-    { name: 'config', alias: 'c', multiple: true, type: String },
-    { name: 'apiPrefix', alias: 'a', type: String, defaultValue: '' },
-    { name: 'port', alias: 'p', type: Number, defaultValue: 3003 },
-    { name: 'host', alias: 'h', type: String, defaultValue: '0.0.0.0' }
-  ]
+const parseConfig = {
+  alias: {
+      s: 'silent',
+      v: 'verbose',
+      c: 'config',
+      a: 'apiPrefix',
+      p: 'port',
+      h: 'host'
+  },
+  boolean: ['silent', 'verbose'],
+  default: {
+      silent: false,
+      verbose: false,
+      apiPrefix: '',
+      port: 3003,
+      host: '0.0.0.0'
+  },    
+  string: ['apiPrefix', 'host', 'config'],
+  collect: ['config'],
+}
 
 
 export const getParams = () : ToolOptions => {
   //console.log(options);
-  const opts = commandLineArgs(optionDefinitions, {
-    partial: true
-  }) as ToolOptions;
+  const opts = parse(Deno.args, parseConfig) as ToolOptions;
 
   const extraConfig : MockerConfig[] = [];
-  for (let fPath of opts.config || []) {
-    if (!existsSync(fPath)) {
-      console.error(`Config file ${fPath} not found. Program will exit.`);
-      exit(-1);
-    } else {
+  for (const fPath of opts.config) {
+    try {
       extraConfig.push(loadConfigFile(fPath));
+    } catch (_) {
+      console.error(`Config file ${fPath} not found. Program will exit.`);
+      Deno.exit(-1);
     }
   }
   

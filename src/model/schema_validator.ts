@@ -1,4 +1,6 @@
-import { Validator, ValidatorResult } from "jsonschema";
+import { AnyObj } from "../common/utils.ts";
+
+import { Validator, ValidatorResult } from "../deps/schema.ts";
 
 // Address, to be embedded on Person
 const responsePayloadSchema = {
@@ -40,12 +42,12 @@ const configSchema = {
     "additionalProperties": false
   };
 
-export const validator = new Validator();
-validator.addSchema(responsePayloadSchema, "/Payload");
-validator.addSchema(routeSchema, "/Route");
-validator.addSchema(configSchema, "/RoutesConfig");
+ export const validator = new Validator();
+ validator.addSchema(responsePayloadSchema, "/Payload");
+ validator.addSchema(routeSchema, "/Route");
+ validator.addSchema(configSchema, "/RoutesConfig");
 
-export const validateConfigSchema = (config: object) : ValidatorResult => {
-    return validator.validate(config, configSchema);
-}
+ export const validateConfigSchema = (config: AnyObj) : ValidatorResult => {
+     return validator.validate(config, configSchema);
+ }
 

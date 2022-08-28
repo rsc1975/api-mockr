@@ -1,6 +1,10 @@
-import { LogEvent, Request, ResponseToolkit, server as hapiServer, Server } from '@hapi/hapi';
-import { ResponseGenerator } from './response_generator';
-import { MockerConfig } from './routes_config';
+import { DELAY_PARAM, FORCE_ERROR_HEADER, FORCE_ERROR_MSG_HEADER, FORCE_ERROR_PARAM, PING_MSG, PRETTY_PARAM, RESPONSE_TIME_HEADER } from './common/http.ts';
+import { isEmpty, pathname } from './common/utils.ts';
+import { extendRequest } from './custom_request.ts';
+import { serve } from './deps/deno.ts';
+import { Context, cors, Hono, Next, StatusCode } from './deps/hono.ts';
+import { ResponseGenerator } from './response_generator.ts';
+import { MockerConfig } from './routes_config.ts';
 
 interface MockServerInputParams {
     version?: string;
@@ -12,17 +16,12 @@ interface MockServerInputParams {
     apiPrefix?: string;
 }
 
+extendRequest();
+
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const PING_MSG = 'API Mockr';
-const PRETTY_PARAM = '_pretty';
-const DELAY_PARAM = '_delay';
-const FORCE_ERROR_PARAM = '_forceError';
-const FORCE_ERROR_HEADER = 'x-mocker-force-error';
-const FORCE_ERROR_MSG_HEADER = 'x-mocker-error-msg';
-
 export class MockServer {
-    public server: Server;
+    public server: Hono;
     public version: string;
     public host: string;
     public port: number;
@@ -30,141 +29,183 @@ export class MockServer {
     public verbose: boolean;
     public silent: boolean;
     public responseConfig: MockerConfig;
+    private abortController = new AbortController();
+    private usemicros = false;
+
 
     constructor({host, port, apiPrefix, verbose, silent, responseConfig, version} : MockServerInputParams = {}) {
-        this.apiPrefix = apiPrefix || process.env.MOCKER_PREFIX || '';
+        this.apiPrefix = apiPrefix || Deno.env.get('MOCKR_PREFIX') || '';
         if (!this.apiPrefix.startsWith("/") && !!this.apiPrefix) {
             this.apiPrefix = "/" + this.apiPrefix;
           }
         this.version = version || 'unknown';
-        this.host = host || process.env.MOCKER_BINDING || '0.0.0.0';
-        this.port = port || +(process.env.MOCKER_PORT || 3003);
+        this.host = host || Deno.env.get('assertEquals(localMockServer.apiPrefix, "/test");BINDING') || '0.0.0.0';
+        this.port = port || +(Deno.env.get('MOCKR_PORT') || 3003);
         this.silent = !!silent;
         this.verbose = !this.silent && !!verbose;
         this.responseConfig = responseConfig || {};
         this.server = this.create();
-        if (this.verbose) {
-            this.printConfig(this.responseConfig);
-        }
+        this.printConfig(this.responseConfig);
     }
 
-    private create() : Server {
-        const srv =  hapiServer({
-            port: this.port,
-            host: this.host,
-            routes: {
-                cors: true,
-                payload: {
-                    output: 'data',
-                    parse: true,                    
-                }
-            }
-        });
-        srv.route({
-            method: 'GET',
-            path: '/',
-            handler: (_, h) => h.response(`${PING_MSG} (v${this.version})`).header('content-type', 'text/plain').takeover()
-        });
-    
-        // Create hapi server catchall route
-        srv.route({
-            method: '*',
-            path: `${this.apiPrefix}/{p*}`,
-            handler: (req: Request, h : ResponseToolkit) => {
-                const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
-                return responseGenerator.generate(req);
-            }
-        });
+    private json(c: Context, obj: unknown, httpStatus = 200) : Response {
+        const rawJson = JSON.stringify(obj);
+        c.res.headers.set('content-type', 'application/json; charset=UTF-8');
+        return c.body(new TextEncoder().encode(rawJson), httpStatus as StatusCode);
+    }
 
-        const logRequest = (req: Request) => {
-            
-            let logReq = `[DEBUG] [➡️] ${req.method.toUpperCase()} ${req.url.pathname}`;
-            if (!!req.url.search) {
-                logReq += ` [params: ${req.url.search.substring(1).replace('&', ' ')}]`;
-            }
-            if (!!req.payload) {
-                const body = req.headers['content-type'] === 'application/json' ? JSON.stringify(req.payload) : req.payload.toString();
-                
-                logReq += ` [payload: ${body}]`;
-            }
-            
-            this.server.log('verbose', logReq);
-        }
+    private txt(c: Context, text: string, httpStatus = 200) : Response {        
+        c.res.headers.set('content-type', 'text/plain; charset=UTF-8');
+        return c.body(new TextEncoder().encode(text), httpStatus as StatusCode);
+    }
 
-        srv.ext('onPreHandler', (req : Request, h : ResponseToolkit) => {
-            if (this.verbose) {
-                logRequest(req);
-            }
-            return h.continue;
-        });
+    async checkHRTime() {
+        this.usemicros = (await Deno.permissions.query({ name: "hrtime"})).state === "granted";
+    }
 
-        srv.ext('onRequest', async (req : Request, h : ResponseToolkit) => {
-            const { headers } : any = req;
-            const delay = +req.query[DELAY_PARAM];
-            if (delay) {
-                await sleep(delay);
-            }
-            return h.continue;
-        });
 
-        srv.ext('onPreResponse', (req : Request, h : ResponseToolkit) => {
-            const { response, headers } : any = req;
-            if (response.output?.statusCode === 404) {
-                return h.response(`Missing route, try: ${this.apiPrefix}/<anything>`).code(404).takeover();
-            }
-            if (req.query[PRETTY_PARAM] && typeof response.source === 'object') {
-                response.spaces(2).takeover();
-            }
-            const forceError = !!req.query[FORCE_ERROR_PARAM];
-            const errorCode = +headers[FORCE_ERROR_HEADER];
-            if (!!errorCode || forceError) {                
-                const errorMsg = headers[FORCE_ERROR_MSG_HEADER];
-                const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
-                const errorResponse = responseGenerator.generateError(req, errorMsg, errorCode);
-                return h.response(errorResponse.payload).code(errorResponse.httpStatus).takeover();
-            }
-            return h.continue;
-        });
-        srv.ext('onPostResponse', (req : Request, h : ResponseToolkit) => {
-            const { response } : any = req;
-            this.server.log('info', `[INFO] [➡️] ${req.method.toUpperCase()} ${req.url.pathname} [↩️ ${response.statusCode >= 400 ? '⭕' : '✅'}] (status: ${response.statusCode}, length: ${response.headers['content-length'] }, content-type: ${response.contentType})`);
-            return h.continue;
-        });        
-
-        srv.events.on('log', (event: LogEvent, tags: { [key: string]: true }) => {
-            if (!this.silent) {
-                if (tags.info) {
-                    console.info(event.data);
-                }
-                if (this.verbose && tags.verbose) {
-                    console.info(event.data);
-                }
-            }
-        });
-    
+    private create() : Hono {
         
-        return srv;
+        this.server = this._createHonoServer();
+        return this.server;
     }
 
 
     async start() : Promise<void> {       
-        await this.server.initialize();        
-        this.server.log('info', `[🟢 api-mockr v${this.version}] Server running at: ${this.server.info.uri}${this.apiPrefix}`);
-        return this.server.start();
+        await this.checkHRTime();
+        const listeningTxt = () => this.log(`[🟢 api-mockr v${this.version}] Server running at: http://${this.host}:${this.port}${this.apiPrefix}`);
+        this.abortController = new AbortController();
+        this.abortController.signal.addEventListener('abort', () => {
+            this.log("❌ ➡️ Server stopped!");
+            this.log(`⏱️ ➡️ Server was running for: ${(performance.now()/1000).toFixed(1)}s`);
+        });
+
+        return serve(this.server.fetch, { 
+            port: this.port, 
+            hostname: this.host, 
+            signal: this.abortController.signal,            
+            onListen: listeningTxt });
+        
     }
 
-    async stop() {
-        await this.server.stop();
-        this.server.log('info', `[🟥 api-mockr] Server stopped`);
-    }
-
-    async dispose() {
-        await this.stop();
+    stop() {        
+        this.abortController.abort();        
     }
 
     printConfig(config: MockerConfig) {
-        this.server.log('verbose', "[INFO] API Mockr is using the following configuration:");
-        this.server.log('verbose', JSON.stringify(config, null, 2)+"\n");        
+        this.log('verbose', "[INFO] API Mockr is using the following configuration:");
+        this.log('verbose', JSON.stringify(config, null, 2)+"\n");        
+    }
+
+    private _createHonoServer() {
+        const srv = new Hono();
+    
+        srv.use('*', async (c: Context, next: Next) => {
+            const start = performance.now();
+            //await c.req.parseBody();
+            await next();
+            const elapsed = performance.now() - start;
+            const elapsedTxt = this.usemicros ? `${(elapsed*1000).toFixed(0)} us` : `${elapsed.toFixed(2)} ms`;
+            c.res.headers.set(RESPONSE_TIME_HEADER, elapsedTxt);
+        });
+
+        srv.use('*', cors())
+
+        srv.use('*', async (c: Context, next: Next) => {
+            const pretty = !!(c.req.query(PRETTY_PARAM) || c.req.query(PRETTY_PARAM) === '');
+            c.pretty(pretty, 2);
+            await next();     
+        });
+
+
+        const logRequest = async (req: Request) => {
+            
+            let logReq = `[DEBUG] [➡️] ${req.method.toUpperCase()} ${pathname(req.url)}`;
+            if (!isEmpty(req.query())) {
+                logReq += ` [params: ${JSON.stringify(req.query())}]`;
+            }
+            const body = await req.parseBody();
+            if (!isEmpty(body)) {    
+               logReq += ` [payload: ${JSON.stringify(body)}]`;
+            }            
+            
+            this.log('verbose', logReq);
+        }
+
+        srv.use('*', async (c: Context, next: Next) => {
+            if (this.verbose) {
+                logRequest(c.req);
+            }
+            await next();
+            const { req, res} = c;
+            this.log(`[INFO] [➡️] ${req.method.toUpperCase()} ${pathname(req.url)} [↩️ ${res.status >= 400 ? '⭕' : '✅'}] (status: ${res.status}, content-type: ${res.headers.get('content-type')})`);
+        });
+
+        srv.use('*', async (c: Context, next: Next) => {
+            
+            const delay = +c.req.query(DELAY_PARAM);
+            if (delay) {
+                await sleep(delay);
+            }
+            await next();
+        });
+
+        
+
+        srv.use('*', async (c: Context, next: Next) => {
+            const { req } = c;
+            const forceError = !!req.query(FORCE_ERROR_PARAM);
+            const errorCode = +req.header(FORCE_ERROR_HEADER);
+            if (!!errorCode || forceError) {                
+                const errorMsg = req.header(FORCE_ERROR_MSG_HEADER);
+                const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
+                const errorResponse = await responseGenerator.generateError(req, errorMsg, errorCode);
+                
+                return this.json(c, errorResponse.payload, errorResponse.httpStatus);
+            }
+            
+            await next();
+            
+        });
+
+        srv.notFound((c: Context) => {
+            return this.txt(c, `Missing route, try: ${this.apiPrefix}/<anything>`, 404);
+        });
+
+        srv.use(`${this.apiPrefix}/*`, async (c: Context, next: Next) => {
+            if (pathname(c.req.url) !== '/') {
+                const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
+                return this.json(c, await responseGenerator.generate(c.req));
+            } else {
+                await next();
+            }
+        });
+
+        srv.get('/', (c) => this.txt(c, `${PING_MSG} (v${this.version})`));
+
+        return srv;
+    
+    }
+
+    log(...args: string[]) {
+        let tag;
+        let msgs;
+        if (['info', 'verbose'].includes(args[0])) {
+            tag = args[0];
+            msgs = args.slice(1);
+        } else {
+            tag = 'info';
+            msgs = args;
+        }
+        
+        if (!this.silent) {
+            if (tag === 'info') {
+                console.info(...msgs);
+            }
+            if (this.verbose && tag === 'verbose') {
+                console.info(...msgs);
+            }
+        }
     }
     
 }
