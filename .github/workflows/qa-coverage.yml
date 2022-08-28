@@ -1,4 +1,4 @@
-name: Launching tests and coverage
+name: Tests and coverage
 on:
   workflow_call:
 
