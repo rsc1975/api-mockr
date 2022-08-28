@@ -36,14 +36,14 @@ const parseConfig = {
 }
 
 
-export const getParams = () : ToolOptions => {
+export const getParams = async () : Promise<ToolOptions> => {
   //console.log(options);
   const opts = parse(Deno.args, parseConfig) as ToolOptions;
 
   const extraConfig : MockerConfig[] = [];
   for (const fPath of opts.config) {
     try {
-      extraConfig.push(loadConfigFile(fPath));
+      extraConfig.push(await loadConfigFile(fPath));
     } catch (_) {
       console.error(`Config file ${fPath} not found. Program will exit.`);
       Deno.exit(-1);

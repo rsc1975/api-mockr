@@ -97,14 +97,25 @@ function isYaml(file: string): boolean {
     return file.endsWith('.yaml') || file.endsWith('.yml');
 }
 
-export const loadConfigFile = (filePath: string): MockerConfig => {
-    const configFileContent = new TextDecoder('utf8').decode(Deno.readFileSync(filePath));
-    const config = isYaml(filePath) ? yaml.load(configFileContent) : JSON.parse(configFileContent);
-    // TODO: validateConfigSchema(config);
-    return config;
+export const loadConfigFile = async (...cfgLocatios: string[]): Promise<MockerConfig> => {
+    const td = new TextDecoder();
+    let rawFileContent;
+    for (const filePath of cfgLocatios) {
+        try {
+            rawFileContent = await Deno.readFile(filePath);
+            const configFileContent = new TextDecoder('utf8').decode(rawFileContent);
+            const config = isYaml(filePath) ? yaml.load(configFileContent) : JSON.parse(configFileContent);
+            // TODO: validateConfigSchema(config);
+            return config;
+        } catch (_) {
+            // Empty
+        }
+    }
+    throw new Error('No config file found');
 }
 
-export const defaultResponseConfig: MockerConfig = loadConfigFile(join('.', 'config', 'response.yml'));
+const CONFIG_FILE_LOCATIONS = [join(Deno.cwd(), 'config', 'response.yml'), join(Deno.cwd(), 'src', 'config', 'response.yml')];
+export const defaultResponseConfig: MockerConfig = await loadConfigFile(...CONFIG_FILE_LOCATIONS);
 
 /**
  * Checks is config object is valid

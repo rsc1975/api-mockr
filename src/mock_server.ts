@@ -49,7 +49,8 @@ export class MockServer {
     }
 
     private json(c: Context, obj: unknown, httpStatus = 200) : Response {
-        const rawJson = JSON.stringify(obj);
+        const prettySpaces = c.get('prettySpaces');
+        const rawJson = JSON.stringify(obj, null, prettySpaces);
         c.res.headers.set('content-type', 'application/json; charset=UTF-8');
         return c.body(new TextEncoder().encode(rawJson), httpStatus as StatusCode);
     }
@@ -113,10 +114,12 @@ export class MockServer {
 
         srv.use('*', async (c: Context, next: Next) => {
             const pretty = !!(c.req.query(PRETTY_PARAM) || c.req.query(PRETTY_PARAM) === '');
-            c.pretty(pretty, 2);
+            if (pretty) {
+                c.pretty(pretty, 2);
+                c.set('prettySpaces', 2);
+            }
             await next();     
         });
-
 
         const logRequest = async (req: Request) => {
             

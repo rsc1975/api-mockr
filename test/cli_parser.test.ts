@@ -15,9 +15,9 @@ describe('Testing CLI parser', () => {
         restore();
     });
     
-    it('checks default params', () => {
+    it('checks default params', async () => {
         Object.defineProperty(Deno, 'args', { value: [] });
-        const params = getParams();
+        const params = await getParams();
         assert(typeof params === 'object');
         assertFalse(params.silent);
         assertFalse(params.verbose);
@@ -26,15 +26,15 @@ describe('Testing CLI parser', () => {
         assertEquals(params.host, '0.0.0.0');
     });
 
-    it('checks config param', () => {
+    it('checks config param', async () => {
 
         const cliParams = ['--config', 'fichero1.yml', '--config', 'fichero2.yml', '--port', '8080'];
         Object.defineProperty(Deno, 'args', { value: cliParams });
         
         const validResp = "defaultResponse:\n    success: true\n";
-        stub(Deno, 'readFileSync', () => new TextEncoder().encode(validResp));
+        stub(Deno, 'readFile', () => Promise.resolve(new TextEncoder().encode(validResp)));
 
-        const params = getParams();
+        const params = await getParams();
         assert(typeof params === 'object');
         assertFalse(params.silent);
         assertFalse(params.verbose);
@@ -44,7 +44,7 @@ describe('Testing CLI parser', () => {
         
     });
 
-    it('checks missing config file', () => {
+    it('checks missing config file', async () => {
         Object.defineProperty(Deno, 'args', { value: ['-c', 'fichero1.yml'] });
         stub(Deno, 'readFileSync', () => {throw new Error("Missing file");});
         const exitStub = stub(Deno, 'exit', () => { 
@@ -52,7 +52,7 @@ describe('Testing CLI parser', () => {
         } );
         
         try {
-            getParams();
+            await getParams();
         } catch(e: unknown) {
             assertIsError(e);
             assertStringIncludes(e.toString(), 'Exit');

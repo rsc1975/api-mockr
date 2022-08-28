@@ -96,32 +96,32 @@ describe('Testing routes config', () => {
         assertEquals(objCopy, {});
     });
 
-    it('checks loadConfigFile JSON file', () => {
-        stub(Deno, 'readFileSync', () => {
-            return new TextEncoder().encode('{ "defaultResponse": { "result": true} }');
+    it('checks loadConfigFile JSON file', async () => {
+        stub(Deno, 'readFile', () => {
+            return Promise.resolve(new TextEncoder().encode('{ "defaultResponse": { "result": true} }'));
         });            
         
-        const conf = loadConfigFile('fichero3.json');
+        const conf = await loadConfigFile('fichero3.json');
         assertExists(conf);
         assertEquals(typeof conf.defaultResponse, 'object');
         assertEquals((<SingleResponseConfig>conf.defaultResponse)!.result, true);
     });
 
-    it('checks loadConfigFile YAML file', () => {
+    it('checks loadConfigFile YAML file', async () => {
 
-        stub(Deno, 'readFileSync', (f: string | URL) => {
+        stub(Deno, 'readFile', (f: string | URL) => {
             if (f === 'fichero1.yml') {
-                return new TextEncoder().encode('defaultResponse:\n    result: true\n');
+                return Promise.resolve(new TextEncoder().encode('defaultResponse:\n    result: true\n'));
             } else {
-                return new TextEncoder().encode('defaultResponse:\n    success: true\n');
+                return Promise.resolve(new TextEncoder().encode('defaultResponse:\n    success: true\n'));
             }
         });            
         
-        let conf = loadConfigFile('fichero1.yml');
+        let conf = await loadConfigFile('fichero1.yml');
         assertExists(conf);
         assertEquals(typeof conf.defaultResponse, 'object');
         assertEquals((<SingleResponseConfig>conf.defaultResponse)!.result, true);
-        conf = loadConfigFile('fichero2.yaml');
+        conf = await loadConfigFile('fichero2.yaml');
         assertExists(conf);
         assertEquals(typeof conf.defaultResponse, 'object');
         assertEquals((<SingleResponseConfig>conf.defaultResponse)!.success, true);

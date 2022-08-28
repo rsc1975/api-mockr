@@ -6,7 +6,7 @@ export const VERSION = await getVersion();
 
 export const run = async () => {
     
-    const params = getParams();
+    const params = await getParams();
 
     const mockServer = new MockServer({...params, version: await getVersion()});
     
