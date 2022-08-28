@@ -104,9 +104,7 @@ export const loadConfigFile = (filePath: string): MockerConfig => {
     return config;
 }
 
-const __dirname = dirname(fromFileUrl(import.meta.url));
-
-export const defaultResponseConfig: MockerConfig = loadConfigFile(join(__dirname, 'config', 'response.yml'));
+export const defaultResponseConfig: MockerConfig = loadConfigFile(join('.', 'config', 'response.yml'));
 
 /**
  * Checks is config object is valid

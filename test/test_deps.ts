@@ -44,5 +44,4 @@ export {
 
 export { extendRequestPrototype } from 'https://deno.land/x/hono@v2.0.9/request.ts';
 
-// deno-lint-ignore no-explicit-any
-export const toAny = (o: unknown) : any => o as any;
+export { toAny } from '../src/common/utils.ts'

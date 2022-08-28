@@ -2,15 +2,12 @@
 import { Context } from "https://deno.land/x/hono@v2.0.8/mod.ts";
 import { dirname, fromFileUrl, join } from "../deps/deno.ts";
 
-const __dirname = dirname(fromFileUrl(import.meta.url));
-
-
 
 export const getVersion = async (): Promise<string> => {
     if (!Deno.env.get('MOCKR_VERSION')) {
         let _currentVersion;
         const td = new TextDecoder();
-        const pkgLocatios: string[] = ['../version.txt', './version.txt', join(Deno.cwd(), 'version.txt'), join(__dirname, '..', '..', 'version.txt')];
+        const pkgLocatios: string[] = ['../version.txt', './version.txt', join(Deno.cwd(), 'version.txt')];
         for (const pkgLocation of pkgLocatios) {
             try {
                 _currentVersion = td.decode(await Deno.readFile(pkgLocation)).trim();
@@ -57,3 +54,6 @@ export function isEmpty(obj: any): boolean {
 
 
 export type AnyObj = { [key: string]: unknown };
+
+// deno-lint-ignore no-explicit-any
+export const toAny = (o: unknown) : any => o as any;
