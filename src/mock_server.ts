@@ -1,9 +1,8 @@
-//import { LogEvent, Request, ResponseToolkit, server as hapiServer, Server } from '@hapi/hapi';
 import { DELAY_PARAM, FORCE_ERROR_HEADER, FORCE_ERROR_MSG_HEADER, FORCE_ERROR_PARAM, PING_MSG, PRETTY_PARAM, RESPONSE_TIME_HEADER } from './common/http.ts';
 import { isEmpty, pathname } from './common/utils.ts';
 import { extendRequest } from './custom_request.ts';
 import { serve } from './deps/deno.ts';
-import { Context, cors, Hono, Next } from './deps/hono.ts';
+import { Context, cors, Hono, Next, StatusCode } from './deps/hono.ts';
 import { ResponseGenerator } from './response_generator.ts';
 import { MockerConfig } from './routes_config.ts';
 
@@ -47,6 +46,17 @@ export class MockServer {
         this.responseConfig = responseConfig || {};
         this.server = this.create();
         this.printConfig(this.responseConfig);
+    }
+
+    private json(c: Context, obj: unknown, httpStatus = 200) : Response {
+        const rawJson = JSON.stringify(obj);
+        c.res.headers.set('content-type', 'application/json; charset=UTF-8');
+        return c.body(new TextEncoder().encode(rawJson), httpStatus as StatusCode);
+    }
+
+    private txt(c: Context, text: string, httpStatus = 200) : Response {        
+        c.res.headers.set('content-type', 'text/plain; charset=UTF-8');
+        return c.body(new TextEncoder().encode(text), httpStatus as StatusCode);
     }
 
     async checkHRTime() {
@@ -128,7 +138,7 @@ export class MockServer {
             }
             await next();
             const { req, res} = c;
-            this.log(`[INFO] [➡️] ${req.method.toUpperCase()} ${pathname(req.url)} [↩️ ${res.status >= 400 ? '⭕' : '✅'}] (status: ${res.status}, length: ${res.headers.get('content-length') }, content-type: ${res.headers.get('content-type')})`);
+            this.log(`[INFO] [➡️] ${req.method.toUpperCase()} ${pathname(req.url)} [↩️ ${res.status >= 400 ? '⭕' : '✅'}] (status: ${res.status}, content-type: ${res.headers.get('content-type')})`);
         });
 
         srv.use('*', async (c: Context, next: Next) => {
@@ -150,7 +160,8 @@ export class MockServer {
                 const errorMsg = req.header(FORCE_ERROR_MSG_HEADER);
                 const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
                 const errorResponse = await responseGenerator.generateError(req, errorMsg, errorCode);
-                return c.json(errorResponse.payload, errorResponse.httpStatus);
+                
+                return this.json(c, errorResponse.payload, errorResponse.httpStatus);
             }
             
             await next();
@@ -158,19 +169,19 @@ export class MockServer {
         });
 
         srv.notFound((c: Context) => {
-            return c.text(`Missing route, try: ${this.apiPrefix}/<anything>`, 404);
+            return this.txt(c, `Missing route, try: ${this.apiPrefix}/<anything>`, 404);
         });
 
         srv.use(`${this.apiPrefix}/*`, async (c: Context, next: Next) => {
             if (pathname(c.req.url) !== '/') {
                 const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
-                return c.json(await responseGenerator.generate(c.req));
+                return this.json(c, await responseGenerator.generate(c.req));
             } else {
                 await next();
             }
         });
 
-        srv.get('/', (c) => c.text(`${PING_MSG} (v${this.version})`));
+        srv.get('/', (c) => this.txt(c, `${PING_MSG} (v${this.version})`));
 
         return srv;
     
