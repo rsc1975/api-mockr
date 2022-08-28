@@ -1,4 +1,5 @@
 name: Tests and coverage
+
 on:
   workflow_call:
 
