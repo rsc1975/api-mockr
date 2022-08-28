@@ -58,25 +58,31 @@ class RefValueObject extends RefValue {
  */
 class RefValueArray extends RefValue {
   static readonly DEFAULT_LENGHT: number = 2;
-  readonly length: number;
+  private _length?: number;
+  public async length() : Promise<number> {
+    if (this._length === undefined) {
+      const currentArray = this.get() as Array<any>;
+      if (currentArray.length === 1) {
+        const lengthExp = currentArray[0]['$length$'] || RefValueArray.DEFAULT_LENGHT;
+        if (PATH_VARIABLE_EXP.test(lengthExp)) {
+          const expValue = await ParamValues.get(lengthExp.replace(/[\$\{\} ]/g, ''));        
+          this._length = Math.max(+(expValue || RefValueArray.DEFAULT_LENGHT), 1);
+        } else {
+          this._length = Math.max(+lengthExp || RefValueArray.DEFAULT_LENGHT, 1);
+        }
+        delete currentArray[0]['$length$'];
+      } else {
+        this._length = currentArray.length;
+      }
+    }
+    return this._length;
+  }
   readonly internalRefs: RefValue[];
 
   constructor(obj: AnyObj, key: string, internalRefs: RefValue[] = []) {
     super(obj, key);
     this.internalRefs = internalRefs;
-    const currentArray = this.get() as Array<any>;
-    if (currentArray.length === 1) {
-      const lengthExp = currentArray[0]['$length$'] || RefValueArray.DEFAULT_LENGHT;
-      if (PATH_VARIABLE_EXP.test(lengthExp)) {
-        const expValue = ParamValues.get(lengthExp.replace(/[\$\{\} ]/g, ''));        
-        this.length = Math.max(+(expValue || RefValueArray.DEFAULT_LENGHT), 1);
-      } else {
-        this.length = Math.max(+lengthExp || RefValueArray.DEFAULT_LENGHT, 1);
-      }
-      delete currentArray[0]['$length$'];
-    } else {
-      this.length = currentArray.length;
-    }
+    
   }
 
 }
@@ -217,14 +223,14 @@ export class ResponseGenerator {
     return values;
   }
 
-  private generateValueObj(request: Request, rvo: RefValueObject): any {
+  private async generateValueObj(request: Request, rvo: RefValueObject): Promise<any> {
     if (rvo.direct) {
       const uniqueVar = rvo.vars[0];
-      rvo.set(this.pathVars[uniqueVar] || ParamValues.get(uniqueVar, request));
+      rvo.set(this.pathVars[uniqueVar] || await ParamValues.get(uniqueVar, request));
     } else {
       let value = rvo.pattern;
-      rvo.vars.forEach((v) => {
-        const genVal = '' + (this.pathVars[v] || ParamValues.get(v, request) || '');
+      await rvo.vars.forEach(async (v) => {
+        const genVal = '' + (this.pathVars[v] || await ParamValues.get(v, request) || '');
         value = value.replace(`\${${v}}`, genVal);
       });
       rvo.set(value);
@@ -232,32 +238,32 @@ export class ResponseGenerator {
   }
 
 
-  private generateValueArray(request: Request, rva: RefValueArray): void {
+  private async generateValueArray(request: Request, rva: RefValueArray): Promise<void> {
     const currentArray = rva.get() as Array<any>;
 
-    const setRefValues = (refs: RefValue[]) => {
+    const setRefValues = async (refs: RefValue[]) => {
       for (const ref of refs.filter(ref => ref instanceof RefValueObject)) {
-        this.generateValueObj(request, ref as RefValueObject);
+        await this.generateValueObj(request, ref as RefValueObject);
       }
       for (const ref of refs.filter(ref => ref instanceof RefValueArray)) {
-        this.generateValueArray(request, ref as RefValueArray);
+        await this.generateValueArray(request, ref as RefValueArray);
       }
     }
 
     if (currentArray.length > 1) {
-      setRefValues(rva.internalRefs);
+      await setRefValues(rva.internalRefs);
     } else {
       const arrayValues = [];
-      for (let i = 0; i < rva.length; i++) {
+      for (let i = 0; i < await rva.length(); i++) {
         if (typeof currentArray[0] === 'object') {
           const rawObj = deepCopy(currentArray[0]);
           const arrayInternalRefs: RefValue[] = this.findAllGeneratedValues(rawObj);
-          setRefValues(arrayInternalRefs);
+          await setRefValues(arrayInternalRefs);
           arrayValues.push(rawObj);
         } else {
           if (PATH_VARIABLE_EXP.test(currentArray[0])) {
             const aux = { value: currentArray[0] };
-            setRefValues([new RefValueObject(aux, 'value')]);
+            await setRefValues([new RefValueObject(aux, 'value')]);
             arrayValues.push(aux.value);
           } else {
             arrayValues.push(currentArray[0]);
@@ -284,18 +290,22 @@ export class ResponseGenerator {
       }
       const aux = { value: responseTemplate };
       const refMainArray = new RefValueArray(aux, 'value', refValues);
-      this.generateValueArray(request, refMainArray);
+      await this.generateValueArray(request, refMainArray);
       return aux.value;
     } else {
       const refValues = this.findAllGeneratedValues(responseTemplate);
-      refValues.filter(rv => rv instanceof RefValueObject).forEach(rv => this.generateValueObj(request, rv as RefValueObject));
-      refValues.filter(rv => rv instanceof RefValueArray).forEach(rv => this.generateValueArray(request, rv as RefValueArray));
+      for (const rv of refValues.filter(rv => rv instanceof RefValueObject)) {
+        await await this.generateValueObj(request, rv as RefValueObject);
+      }
+      for (const rv of refValues.filter(rv => rv instanceof RefValueArray)) {
+        await await this.generateValueArray(request, rv as RefValueArray);
+      }      
+      
       return responseTemplate;
     }
-
   }
 
-  public generateError(request: Request, errorMessage?: string, httpStatus?: number): ErrorResponse {
+  public async generateError(request: Request, errorMessage?: string, httpStatus?: number): Promise<ErrorResponse> {
     if (!errorMessage) {
       errorMessage = "Error in request to path: ${request.path}"
     }
@@ -304,7 +314,9 @@ export class ResponseGenerator {
     const errorTemplateJson : string = JSON.stringify(errorTemplate);
     errorTemplate = JSON.parse(errorTemplateJson.replace(/\${error}/g, errorMessage));
     const refValues = this.findAllGeneratedValues(errorTemplate);    
-    refValues.filter(rv => rv instanceof RefValueObject).forEach(rv  => this.generateValueObj(request, rv as RefValueObject));
+    for (const rv of refValues.filter(rv => rv instanceof RefValueObject)) {
+      await await this.generateValueObj(request, rv as RefValueObject);
+    }
     
     httpStatus = httpStatus || +(<any>errorTemplate).$httpStatus$ || 500;
     if (httpStatus! < 200 || httpStatus! >= 600) {

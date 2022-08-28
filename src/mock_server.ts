@@ -1,6 +1,7 @@
 //import { LogEvent, Request, ResponseToolkit, server as hapiServer, Server } from '@hapi/hapi';
 import { DELAY_PARAM, FORCE_ERROR_HEADER, FORCE_ERROR_MSG_HEADER, FORCE_ERROR_PARAM, PING_MSG, PRETTY_PARAM, RESPONSE_TIME_HEADER } from './common/http.ts';
 import { isEmpty, pathname } from './common/utils.ts';
+import { extendRequest } from './custom_request.ts';
 import { serve } from './deps/deno.ts';
 import { Context, cors, Hono, Next } from './deps/hono.ts';
 import { ResponseGenerator } from './response_generator.ts';
@@ -15,6 +16,8 @@ interface MockServerInputParams {
     responseConfig?: MockerConfig;   
     apiPrefix?: string;
 }
+
+extendRequest();
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -89,6 +92,7 @@ export class MockServer {
     
         srv.use('*', async (c: Context, next: Next) => {
             const start = performance.now();
+            //await c.req.parseBody();
             await next();
             const elapsed = performance.now() - start;
             const elapsedTxt = this.usemicros ? `${(elapsed*1000).toFixed(0)} us` : `${elapsed.toFixed(2)} ms`;
@@ -110,11 +114,10 @@ export class MockServer {
             if (!isEmpty(req.query())) {
                 logReq += ` [params: ${JSON.stringify(req.query())}]`;
             }
-            if (req.body) {
-                const body = await req.parseBody();
-                
-                logReq += ` [payload: ${JSON.stringify(body)}]`;
-            }
+            const body = await req.parseBody();
+            if (!isEmpty(body)) {    
+               logReq += ` [payload: ${JSON.stringify(body)}]`;
+            }            
             
             this.log('verbose', logReq);
         }
@@ -146,7 +149,7 @@ export class MockServer {
             if (!!errorCode || forceError) {                
                 const errorMsg = req.header(FORCE_ERROR_MSG_HEADER);
                 const responseGenerator = new ResponseGenerator(this.responseConfig, this.apiPrefix);
-                const errorResponse = responseGenerator.generateError(req, errorMsg, errorCode);
+                const errorResponse = await responseGenerator.generateError(req, errorMsg, errorCode);
                 return c.json(errorResponse.payload, errorResponse.httpStatus);
             }
             

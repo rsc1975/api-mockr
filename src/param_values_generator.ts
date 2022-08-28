@@ -1,5 +1,5 @@
 
-import { AnyObj, pathname } from './common/utils.ts';
+import { AnyObj, isEmpty, pathname } from './common/utils.ts';
 import { randAddress, randBrand, randCompanyName, randCountry, randCountryCode, randEmail, randEmoji, randFilePath, randFirstName, randFullName, randFutureDate, randIp, randJobArea, randJobTitle, randLastName, randPastDate, randPhoneNumber, randPhrase, randSports, randUrl, randUserName, randUuid, randZipCode } from './deps/falso.ts';
 
 // deno-lint-ignore no-explicit-any
@@ -12,13 +12,19 @@ export class ParamValues {
   static readonly generators: Record<generatorCategory, generatorConfig> = {
     request: {
       path: (req: Request) => pathname(req.url),
-      params: (req: Request, paramName?: string) => paramName ? req.query(paramName) : req.query(),
+      params: (req: Request, paramName?: string) => {
+        if (paramName) {
+          return req.query(paramName);
+        } else {
+          const params = req.query();
+          return isEmpty(params) ? undefined : params;
+        } 
+      },
       payload: async (req: Request, paramName?: string) => {
         const body = await req.parseBody();
         if (body instanceof ArrayBuffer) {
           return undefined;
-        }
-        console.log(typeof body, body);
+        }        
         return paramName ? (body as AnyObj)[paramName] : body;
       },
       headers: (req: Request, headerName?: string) => headerName ? req.header(headerName.toLowerCase()) : req.header(),
@@ -62,7 +68,7 @@ export class ParamValues {
     }
   }
 
-  public static get(paramName: string, req?: Request): AnyObj | number | string | boolean | null {
+  public static async get(paramName: string, req?: Request): Promise<AnyObj | number | string | boolean | null> {
     const [category, command, ...params] = paramName.split('.');
     const generator = ParamValues.generators[category as generatorCategory] as AnyObj;
     if (!generator) {
@@ -74,6 +80,7 @@ export class ParamValues {
     }
 
     const commandParams = (category === 'request') ? [req, ...params] : params;
-    return commandFn(...commandParams);
+    return await commandFn(...commandParams);
   }
+
 }
