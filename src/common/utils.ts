@@ -1,10 +1,14 @@
 
 import { Context } from "https://deno.land/x/hono@v2.0.8/mod.ts";
-import { dirname, fromFileUrl, join } from "../deps/deno.ts";
+import { join } from "../deps/deno.ts";
 
+let VERSION = 'Unknown';
 
 export const getVersion = async (): Promise<string> => {
-    if (!Deno.env.get('MOCKR_VERSION')) {
+    if (Deno.env.get('MOCKR_VERSION')) {
+        VERSION = Deno.env.get('MOCKR_VERSION')!;
+    }
+    if (!VERSION) {
         let _currentVersion;
         const td = new TextDecoder();
         const pkgLocatios: string[] = ['../version.txt', './version.txt', join(Deno.cwd(), 'version.txt')];
@@ -23,7 +27,7 @@ export const getVersion = async (): Promise<string> => {
         }
     }
 
-    return Deno.env.get('MOCKR_VERSION')!;
+    return VERSION;
 }
 
 export function getCallerIP(c: Context) {
