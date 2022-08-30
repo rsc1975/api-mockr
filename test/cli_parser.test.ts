@@ -3,12 +3,14 @@
 import { assertStringIncludes } from 'https://deno.land/std@0.85.0/testing/asserts.ts';
 import { getParams } from '../src/cli_parser.ts';
 import { afterEach, assert, assertEquals, assertFalse, assertIsError, assertSpyCallArgs, assertSpyCalls, beforeAll, describe, it, restore, stub } from './test_deps.ts';
+import { mockMainModule } from './test_utils.ts';
 
 
 describe('Testing CLI parser', () => {
 
     beforeAll(() => {
         Deno.env.set('NODE_ENV', 'test');
+        mockMainModule();
     });
 
     afterEach(() => {

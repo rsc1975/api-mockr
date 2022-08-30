@@ -1,13 +1,16 @@
 
 import { assertStringIncludes } from 'https://deno.land/std@0.85.0/testing/asserts.ts';
-import { deepCopy, defaultResponseConfig, getConfig, loadConfigFile, MockerConfig, SingleResponseConfig } from '../src/routes_config.ts';
-import { afterEach, assertEquals, assertExists, assertNotEquals, beforeAll, describe, fail, it, restore, stub, toAny } from './test_deps.ts';
+import { deepCopy, getDefaultConfig, getConfig, loadConfigFile, MockerConfig, SingleResponseConfig } from '../src/routes_config.ts';
+import * as rc from '../src/routes_config.ts';
+import { afterEach, assertEquals, assertExists, assertNotEquals, beforeAll, describe, fail, it, join, restore, stub, toAny } from './test_deps.ts';
+import { mockMainModule } from './test_utils.ts';
 
 
 describe('Testing routes config', () => {
 
     beforeAll(() => {
         Deno.env.set('NODE_ENV', 'test');
+        mockMainModule();
     });
 
     afterEach(() => {
@@ -24,15 +27,15 @@ describe('Testing routes config', () => {
         assertEquals(conf['routes']!['get']!['say-whatever']['success'], true);
     }
 
-    it('checks default config', () => {
-        evalDefaultConfig(defaultResponseConfig);        
+    it('checks default config', async () => {
+        evalDefaultConfig(await getDefaultConfig());
     });
 
-    it('checks default config indirect', () => {
-        evalDefaultConfig(getConfig());        
+    it('checks default config indirect', async () => {
+        evalDefaultConfig(await getConfig());        
     });
 
-    it('overrides default config', () => {
+    it('overrides default config', async () => {
         const newconfig = {
             routes: {
                 "*": {
@@ -47,7 +50,7 @@ describe('Testing routes config', () => {
                 }
             }
         };
-        const composedConfig = toAny(getConfig(newconfig as MockerConfig));
+        const composedConfig = toAny(await getConfig(newconfig as MockerConfig));
         assertEquals(composedConfig.defaultResponse!['success'], true);
         assertEquals(typeof composedConfig.routes!['*']!["/${id}"], 'object');
         assertEquals(composedConfig.routes!['*']!["/${id}"]['success'], false);
@@ -57,7 +60,7 @@ describe('Testing routes config', () => {
 
     });
 
-    it('checks wrong config', () => {
+    it('checks wrong config', async () => {
         const wrongConfig = {
             routes_missing: {
                 post: {
@@ -65,7 +68,7 @@ describe('Testing routes config', () => {
             }
         };
         try {
-            getConfig(wrongConfig as MockerConfig);
+            await getConfig(wrongConfig as MockerConfig);
             fail('Should have thrown an error with an invalid config');
         } catch(err: unknown) {
             assertStringIncludes(toAny(err).message, 'ERROR validating config')

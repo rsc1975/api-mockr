@@ -1,8 +1,10 @@
 
 import { Context } from "https://deno.land/x/hono@v2.0.8/mod.ts";
-import { join } from "../deps/deno.ts";
+import { dirname, fromFileUrl, join } from "../deps/deno.ts";
 
-let VERSION = 'Unknown';
+let VERSION :string | undefined = undefined;
+
+export const getMainModuleDir = () : string => dirname(fromFileUrl(Deno.mainModule));
 
 export const getVersion = async (): Promise<string> => {
     if (Deno.env.get('MOCKR_VERSION')) {
@@ -11,7 +13,8 @@ export const getVersion = async (): Promise<string> => {
     if (!VERSION) {
         let _currentVersion;
         const td = new TextDecoder();
-        const pkgLocatios: string[] = ['../version.txt', './version.txt', join(Deno.cwd(), 'version.txt')];
+        const pkgLocatios: string[] = [join(getMainModuleDir(),'..', 'version.txt'), join(getMainModuleDir(), 'version.txt')];
+        //console.log('pkgLocatios:', pkgLocatios);
         for (const pkgLocation of pkgLocatios) {
             try {
                 _currentVersion = td.decode(await Deno.readFile(pkgLocation)).trim();
@@ -21,13 +24,11 @@ export const getVersion = async (): Promise<string> => {
             }
         }
         if (_currentVersion) {
-            Deno.env.set('MOCKR_VERSION', _currentVersion);
-        } else {
-            return 'Unknown';
+            VERSION = _currentVersion;
         }
     }
 
-    return VERSION;
+    return VERSION || 'Unknown';
 }
 
 export function getCallerIP(c: Context) {
@@ -61,3 +62,4 @@ export type AnyObj = { [key: string]: unknown };
 
 // deno-lint-ignore no-explicit-any
 export const toAny = (o: unknown) : any => o as any;
+

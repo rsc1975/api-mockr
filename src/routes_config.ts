@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { AnyObj } from "./common/utils.ts";
-import { dirname, fromFileUrl, join } from "./deps/deno.ts";
+import { AnyObj, getMainModuleDir } from "./common/utils.ts";
+import { join } from "./deps/deno.ts";
 import { yaml } from "./deps/schema.ts";
 import { validateConfigSchema } from "./model/schema_validator.ts";
 
@@ -114,8 +114,15 @@ export const loadConfigFile = async (...cfgLocatios: string[]): Promise<MockerCo
     throw new Error('No config file found');
 }
 
-const CONFIG_FILE_LOCATIONS = [join(Deno.cwd(), 'config', 'response.yml'), join(Deno.cwd(), 'src', 'config', 'response.yml')];
-export const defaultResponseConfig: MockerConfig = await loadConfigFile(...CONFIG_FILE_LOCATIONS);
+let _defaultResponseConfig: MockerConfig;
+
+export const getDefaultConfig = async () : Promise<MockerConfig> => {
+    if (!_defaultResponseConfig) {
+        const DEFAULT_CONFIG_FILE_LOCATIONS = [join(getMainModuleDir(), 'config', 'response.yml'), join(getMainModuleDir(), 'src', 'config', 'response.yml')];
+        _defaultResponseConfig = await loadConfigFile(...DEFAULT_CONFIG_FILE_LOCATIONS);
+    }
+    return _defaultResponseConfig!;
+}
 
 /**
  * Checks is config object is valid
@@ -158,8 +165,8 @@ export function assertConfigIsValid(conf: AnyObj) : void {
  * @param otherConfig Additional config object to merge with the default config
  * @returns The merged config object
  */
-export function getConfig(...otherConfigs: MockerConfig[]) : MockerConfig {
-    const defaultConfigCopy = Merger.deepMerge({}, defaultResponseConfig) as MockerConfig;
+export async function getConfig(...otherConfigs: MockerConfig[]) : Promise<MockerConfig> {
+    const defaultConfigCopy = Merger.deepMerge({}, await getDefaultConfig()) as MockerConfig;
     if (otherConfigs.length > 0) {
         prepareConfigMerge(otherConfigs);
         const newConfig = Merger.deepMerge(...otherConfigs) as MockerConfig;

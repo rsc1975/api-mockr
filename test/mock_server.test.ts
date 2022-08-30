@@ -3,12 +3,14 @@ import { assertExists } from "https://deno.land/std@0.85.0/testing/asserts.ts";
 import { PING_MSG, RESPONSE_TIME_HEADER } from "../src/common/http.ts";
 import { MockServer } from "../src/mock_server.ts";
 import { stub, assertMatch, afterEach, assertStringIncludes, assert, assertEquals, assertInstanceOf, beforeAll, describe, Hono, it, restore, spy, assertSpyCalls, assertSpyCallArg } from "./test_deps.ts";
+import { mockMainModule } from "./test_utils.ts";
 
 
 describe('Testing server management', () => {
     let mockServer : MockServer;
     let baseUrl : string;
     beforeAll(() => {
+        mockMainModule();
         const responseConfig = {
             defaultResponse: {
                 success: true
@@ -105,7 +107,6 @@ describe('Testing server management', () => {
         const req = new Request(`${baseUrl}/whatever`);
         const res = await mockServer.server.request(req);
         const payload = await res.text();
-        console.log(payload)
         assert(payload.startsWith('Missing route, try:'));
         assertEquals(res.status, 404);
     });

@@ -3,8 +3,6 @@ export * from "../src/deps/hono.ts";
 
 //export  {type PermissionDescriptor, PermissionStatus } from Deno.PermissionStatus;
 
-
-
 export {
     assertSpyCalls,
     assertSpyCall,

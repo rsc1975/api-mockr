@@ -62,18 +62,15 @@ class RefValueArray extends RefValue {
   public async length() : Promise<number> {
     if (this._length === undefined) {
       const currentArray = this.get() as Array<any>;
-      if (currentArray.length === 1) {
-        const lengthExp = currentArray[0]['$length$'] || RefValueArray.DEFAULT_LENGHT;
-        if (PATH_VARIABLE_EXP.test(lengthExp)) {
-          const expValue = await ParamValues.get(lengthExp.replace(/[\$\{\} ]/g, ''));        
-          this._length = Math.max(+(expValue || RefValueArray.DEFAULT_LENGHT), 1);
-        } else {
-          this._length = Math.max(+lengthExp || RefValueArray.DEFAULT_LENGHT, 1);
-        }
-        delete currentArray[0]['$length$'];
+      // (currentArray.length === 1);
+      const lengthExp = currentArray[0]['$length$'] || RefValueArray.DEFAULT_LENGHT;
+      if (PATH_VARIABLE_EXP.test(lengthExp)) {
+        const expValue = await ParamValues.get(lengthExp.replace(/[\$\{\} ]/g, ''));        
+        this._length = Math.max(+(expValue || RefValueArray.DEFAULT_LENGHT), 1);
       } else {
-        this._length = currentArray.length;
+        this._length = Math.max(+lengthExp || RefValueArray.DEFAULT_LENGHT, 1);
       }
+      delete currentArray[0]['$length$'];
     }
     return this._length;
   }

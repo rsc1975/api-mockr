@@ -50,7 +50,7 @@ export const getParams = async () : Promise<ToolOptions> => {
     }
   }
   
-  opts.responseConfig = getConfig(...extraConfig);
+  opts.responseConfig = await getConfig(...extraConfig);
   
   return opts;  
 }

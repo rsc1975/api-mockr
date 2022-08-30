@@ -64,26 +64,24 @@ describe('Testing Config model validator', () => {
     });
 
     it('checks getVersion', async () => {
-
-        stub(Deno, 'readFile', () => {            
+        stub(Deno, 'readFile', () => {
+            throw Error('File not found');
+        });            
+        let v = await getVersion();
+        assertEquals(v, 'Unknown');
+        restore();
+        stub(Deno, 'readFile', () => {
             return Promise.resolve(new TextEncoder().encode('0.0.0'));
         });            
         
-        let v = await getVersion();
+        v = await getVersion();
         assertEquals(v, '0.0.0');
 
         Deno.env.set('MOCKR_VERSION', '0.0.1');
 
         v = await getVersion();
-        assertEquals(v, '0.0.1');
-        restore();
+        assertEquals(v, '0.0.1');        
         Deno.env.delete('MOCKR_VERSION');
-
-        stub(Deno, 'readFile', () => {
-            throw Error('File not found');
-        });            
-        v = await getVersion();
-        assertEquals(v, 'Unknown');
 
     });
 });

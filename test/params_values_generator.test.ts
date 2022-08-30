@@ -57,6 +57,12 @@ describe('Testing params values generator', () => {
         assertEquals((value as AnyObj).bar, req.query('bar'));
 
     });
+    it('checks ParamValues for empty request.params', async () => {
+        const req = new Request('http://localhost:3003/api/whatever');
+        const value = await ParamValues.get('request.params', req);
+
+        assertEquals(value, undefined);
+    });
 
     it('checks ParamValues for request.params.bar', async () => {
         const req = createRequest();
@@ -90,7 +96,7 @@ describe('Testing params values generator', () => {
         assertEquals(value2, undefined);
         
         const req2 = new Request('http://localhost:3003/api/');
-        console.log(await req2.parseBody());
+        
         const value3 = await ParamValues.get('request.payload.whatever', req2);
 
         assertEquals(value3, undefined);
