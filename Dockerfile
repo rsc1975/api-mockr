@@ -12,7 +12,6 @@ ADD version.txt /version.txt
 
 RUN echo -e '#!/bin/sh\n \
 echo Launching api-mockr...\n \
-echo PARAMS: $@ \n \
 deno run -A ./api-mockr.ts $@ $MOCKR_PARAMS\n ' > /entrypoint.sh
 RUN chmod +x /entrypoint.sh 
 
