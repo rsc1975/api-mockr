@@ -45,7 +45,7 @@ jobs:
           retention-days: 1
           path: |
                 version.txt
-                config/
+                src/config/
                 api-mockr.ts
                 Dockerfile
       - name: "Show result: ${{ job.status }}"
