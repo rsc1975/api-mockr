@@ -19,7 +19,7 @@ jobs:
         with:
           deno-version: v1.x
       - run: |
-              echo "APP_VERSION=$(npm run --silent version)" >> $GITHUB_ENV
+              echo "APP_VERSION=$(cat version.txt)" >> $GITHUB_ENV
       - name: Version Check
         if: ${{ github.ref_name != format('v{0}',env.APP_VERSION) }}
         uses: actions/github-script@v3
