@@ -5,7 +5,6 @@
 [![CI](https://img.shields.io/github/workflow/status/rsc1975/api-mockr/Docker%20image?logo=github)](https://github.com/rsc1975/api-mockr/actions/workflows/dockerhub-upload.yml)
 [![Last Commit](https://img.shields.io/github/last-commit/rsc1975/api-mockr?logo=github)](https://github.com/rsc1975/api-mockr/commits/main)
 [![Docker version](https://img.shields.io/docker/v/dvlprtech/api-mockr?sort=semver&logo=docker)](https://hub.docker.com/r/dvlprtech/api-mockr)
-[![NPM version](https://img.shields.io/npm/v/api-mockr?logo=npm)](https://www.npmjs.com/package/api-mockr)
 
 
 # api-mockr
