@@ -17,7 +17,6 @@ export class ParamValues {
           return req.query(paramName);
         } else {
           const params = req.query();
-          console.log('params', params);
           return isEmpty(params) ? undefined : params;
         } 
       },
