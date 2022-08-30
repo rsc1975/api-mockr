@@ -10,12 +10,12 @@ ADD api-mockr.ts ./
 ADD src/config ./config/
 ADD version.txt /version.txt
 
-RUN echo -e '\
-#!/usr/bin/env sh\n \
+RUN echo -e '#!/bin/sh\n \
 echo Launching api-mockr...\n \
-deno run -A ./api-mockr.ts $MOCKR_PARAMS\n ' > /entrypoint.sh
+echo PARAMS: $@ \n \
+deno run -A ./api-mockr.ts $@ $MOCKR_PARAMS\n ' > /entrypoint.sh
 RUN chmod +x /entrypoint.sh 
 
 ENV MOCKR_PARAMS=""
 
-CMD [ "/entrypoint.sh" ]
+ENTRYPOINT [ "/entrypoint.sh" ]

@@ -20,15 +20,9 @@ Currently, only REST API responses are supported.
 There is a demo available [here](https://api-mockr.dvlpr.tech/). The application is deployed in the free tier of [Cyclic](https://cyclic.sh/), so please, don't abuse.
 # Getting started
 
-This is a NodeJS application, you can install it as dev dependency in your project or as independent project, there is also a [Docker Image](https://hub.docker.com/r/dvlprtech/api-mockr).
+This is a Deno application, packaged as a Dokcer image.
 
 ## Installation
-
-Installation as dev dependency:
-
-```sh
-npm install --save-dev api-mockr
-```	
 
 Installation as docker image:
 
@@ -36,20 +30,38 @@ Installation as docker image:
 docker pull dvlprtech/api-mockr
 ```
 
-For further details about the use with docker you can access to DockerHub [api-mockr image](https://hub.docker.com/r/dvlprtech/api-mockr) page.
-
 ## How to use
 
-You can use the CLI tool `api-mockr` to start the application:
+If we only want to take a look and run the application with the default config:
 
-```sh
-npx api-mockr
+```
+docker run --rm --name mockr -it -p 3003:3003 dvlprtech/api-mockr
 ```
 
-The following output will apear:
+We should see something like:
+
+```
+Launching api-mockr...
+[🟢 api-mockr] Server running at: http://0.0.0.0:3003
+```
+
+To stop de server, if the container is running in interactive mode, press [Ctrl+C]
+
+The application default port es 3003, to use custom config files we can map a volume on /config container directory and to pass specific parameters to the application we can pass them to the command line or use the environment variable MOCKR_PARAMS (Notice the missing E in "MOCKR_").
+
+In the following example we are passing the --verbose option parameter and the local config file: `/my-local-configs-paths/user-crud.yml`:
 
 ```sh
-[🟢 api-mockr v0.0.0] Server running at: http://0.0.0.0:3003
+# The  /config/user-crud.yml is the container path to config ile
+docker run --rm --name mockr -it -p 3003:3003 -v /my-local-configs-paths:/config dvlprtech/api-mockr --verbose --config=/config/user-crud.yml
+```
+
+Using the env `MOCKR_PARAMS`:
+
+```sh
+# The  /config/user-crud.yml is the container path to config ile
+MOCKR_PARAMS="--verbose --config=/config/user-crud.yml"
+docker run --rm --name mockr -it -p 3003:3003 -v /my-local-configs-paths:/config -e MOCKR_PARAMS="$MOCKR_PARAMS" dvlprtech/api-mockr
 ```
 
 There are several options params that can be used to configure the server:
@@ -64,8 +76,8 @@ There are several options params that can be used to configure the server:
 Example of use:
     
 ```sh
-$ npx api-mockr --port=13003 --host=localhost --apiPrefix=/api
-[🟢 api-mockr v0.0.0] Server running at: http://localhost:13003/api
+$ docker run --rm -it -p 13003:13003 dvlprtech/api-mockr --port=13003 --apiPrefix=/api --verbose
+[🟢 api-mockr v0.0.0] Server running at: http://0.0.0.0:13003/api
 ```
 
 Without additional configuration, the default server will response with the following data to whatever request:
