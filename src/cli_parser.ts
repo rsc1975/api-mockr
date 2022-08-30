@@ -28,8 +28,8 @@ const parseConfig = {
       silent: false,
       verbose: false,
       apiPrefix: '',
-      port: 3003,
-      host: '0.0.0.0'
+      port: +(Deno.env.get('PORT') ||3003),
+      host: Deno.env.get('HOST') || '0.0.0.0'
   },    
   string: ['apiPrefix', 'host', 'config'],
   collect: ['config'],
